@@ -681,15 +681,15 @@ static int disassemble(RAsm *a, RAsmOp *op, const ut8 *buf, int len) {
 		break;
 	// It aligns the storage to 32bits
 	case CLCY_STS: // Store single
-		snprintf(op->buf_asm, 64, "sts %s, [%s + "PFMT64x", %d]", rA, rB, imm, count);
+		snprintf(op->buf_asm, 64, "sts %s, [%s + %"PFMT64x", %d]", rA, rB, imm, count);
 		break;
 	// It aligns the storage to 32bits
 	case CLCY_STT: // Store tri
-		snprintf(op->buf_asm, 64, "stt %s, [%s + "PFMT64x", %d]", rA, rB, imm, count);
+		snprintf(op->buf_asm, 64, "stt %s, [%s + %"PFMT64x", %d]", rA, rB, imm, count);
 		break;
 	// It aligns the storage to 32bits
 	case CLCY_STW: // Store word
-		snprintf(op->buf_asm, 64, "stw %s, [%s + "PFMT64x", %d]", rA, rB, imm, count);
+		snprintf(op->buf_asm, 64, "stw %s, [%s + %"PFMT64x", %d]", rA, rB, imm, count);
 		break;
 	case CLCY_WT: // Wait
 		snprintf(op->buf_asm, 64, "wt");

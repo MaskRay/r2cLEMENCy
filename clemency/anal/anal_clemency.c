@@ -522,7 +522,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 	case CLCY_MD: // Modulus
 		op->type = R_ANAL_OP_TYPE_MOD;
 		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%s,%,%s,=,",rC,rB,rA);
+		r_strbuf_setf (&op->esil, "%s,%s,%c,%s,=,",rC,rB,'%',rA);
 		break;
 	case CLCY_MDF: // Modulus floating point
 		op->size = 3;
@@ -533,7 +533,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 	case CLCY_MDI: // Modulus immediate
 		op->type = R_ANAL_OP_TYPE_MOD;
 		op->size = 3;
-		r_strbuf_setf (&op->esil, "%"PFMT64d",%s,%,%s,=,",imm,rB,rA);
+		r_strbuf_setf (&op->esil, "%"PFMT64d",%s,%c,%s,=,",imm,rB,'%',rA);
 		break;
 	case CLCY_MDIM: // Modulus immediate multi reg
 		op->type = R_ANAL_OP_TYPE_MOD;
@@ -542,7 +542,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 	case CLCY_MDIS: // Modulus immediate signed
 		op->type = R_ANAL_OP_TYPE_MOD;
 		op->size = 3;
-		r_strbuf_setf (&op->esil, "%"PFMT64d",%s,%,%s,=,",imm,rB,rA);
+		r_strbuf_setf (&op->esil, "%"PFMT64d",%s,%c,%s,=,",imm,rB,'%',rA);
 		break;
 	case CLCY_MDISM: // Modulus immediate signed multi reg
 		op->type = R_ANAL_OP_TYPE_MOD;
@@ -555,7 +555,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 	case CLCY_MDS: // Modulus signed
 		op->type = R_ANAL_OP_TYPE_MOD;
 		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%s,%,%s,=,",rC,rB,rA);
+		r_strbuf_setf (&op->esil, "%s,%s,%c,%s,=,",rC,rB,'%',rA);
 		break;
 	case CLCY_MDSM: // Modulus signed multi reg
 		op->type = R_ANAL_OP_TYPE_REG;
