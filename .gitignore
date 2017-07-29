@@ -1,0 +1,8 @@
+*.swo
+*.swp
+*.un~
+*.dylib
+*.so
+.ycm_extra_conf.py
+*dSYM
+tags

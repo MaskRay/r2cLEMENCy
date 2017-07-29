@@ -1,0 +1,3039 @@
+{
+  "AD": {
+    "title": "Add",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000000",
+    "format": "AD rA, rB, rC",
+    "purpose": "Add two 27-bit integer registers together",
+    "description": "The 27-bit value in rC is added to the 27-bit value in rB, the",
+    "operation": "rA ← rB + rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADC": {
+    "title": "Add With Carry",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0100000",
+    "format": "ADC rA, rB, rC",
+    "purpose": "Add two 27-bit integer registers together including the carry bit",
+    "description": "The 27-bit value in rC is added to the 27-bit value in rB, the",
+    "operation": "rA ← rB + rC + Carry_Bit",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADCI": {
+    "title": "Add Immediate With Carry",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0100000",
+    "format": "ADCI rA, rB, IMM",
+    "purpose": "Add a 7-bit immediate value to a 27-bit integer register including",
+    "description": "The 7-bit immediate value is added to the 27-bit value in rB, the",
+    "operation": "rA ← rB + IMM + Carry_Bit",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADCIM": {
+    "title": "Add Immediate Multi Reg With",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0100010",
+    "format": "ADCIM rA, rB, IMM",
+    "purpose": "Add a 7-bit immediate value to a 54-bit integer register including",
+    "description": "The 7-bit immediate value is added to the 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADCM": {
+    "title": "Add Multi Reg With Carry",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0100010",
+    "format": "ADCM rA, rB, rC",
+    "purpose": "Add two 54-bit integer registers together including the carry bit",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADF": {
+    "title": "Add Floating Point",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000001",
+    "format": "ADF rA, rB, rC",
+    "purpose": "Add two 27-bit floating point registers together",
+    "description": "The 27-bit floating point value in rC is added to the 27-bit floating point value in rB, the result is placed in rA.",
+    "operation": "rA ← rB + rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADFM": {
+    "title": "Add Floating Point Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000011",
+    "format": "ADFM rA, rB, rC",
+    "purpose": "Add two 54-bit floating point registers together",
+    "description": "The 54-bit floating point value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADI": {
+    "title": "Add Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0000000",
+    "format": "ADI rA, rB, IMM",
+    "purpose": "Add a 7-bit immediate value to a 27-bit integer register",
+    "description": "The 7-bit immediate value is added to the 27-bit value in rB, the",
+    "operation": "rA ← rB + IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADIM": {
+    "title": "Add Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0000010",
+    "format": "ADIM rA, rB, IMM",
+    "purpose": "Add a 7-bit immediate value to a 54-bit integer register",
+    "description": "The 7-bit immediate value is added to the 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ADM": {
+    "title": "Add Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000010",
+    "format": "ADM rA, rB, rC",
+    "purpose": "Add two 54-bit integer registers together",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "AN": {
+    "title": "And",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0010100",
+    "format": "AN rA, rB, rC",
+    "purpose": "Bit-wise AND two 27-bit integer registers together",
+    "description": "The 27-bit value in rC is bit-wise AND to the 27-bit value in rB,",
+    "operation": "rA ← rB & rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ANI": {
+    "title": "And Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0010100",
+    "format": "ANI rA, rB, IMM",
+    "purpose": "Bit-wise AND a 27-bit integer register and 7-bit immediate together",
+    "description": "The 7-bit immediate value is bit-wise AND to the 27-bit value",
+    "operation": "rA ← rB & IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ANM": {
+    "title": "And Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0010110",
+    "format": "ANM rA, rB, rC",
+    "purpose": "Bit-wise AND two 54-bit integer registers together",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "B": {
+    "title": "Branch Conditional",
+    "bits": [],
+    "format": "Bcc Offset",
+    "purpose": "Conditional branch to an offset",
+    "description": "If the specified condition is true then the sign extended offset is",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "BF": {
+    "title": "Bit Flip",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001100",
+    "format": "BF rA, rB",
+    "purpose": "Bit flip a 27-bit register",
+    "description": "Invert all bits of the 27-bit rB register value and store the result",
+    "operation": "rA ← ~rB",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "BFM": {
+    "title": "Bit Flip Multi Reg",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001110",
+    "format": "BFM rA, rB",
+    "purpose": "Bit flip a 54-bit register",
+    "description": "Invert all bits of the 54-bit rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "BR": {
+    "title": "Branch Register Conditional",
+    "bits": [
+      [
+        9,
+        10
+      ],
+      [
+        14,
+        15
+      ]
+    ],
+    "bytes": "110010",
+    "format": "BRcc rA",
+    "purpose": "Conditional branch to a register",
+    "description": "If the specified condition is true then the value in rA is placed",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "BRA": {
+    "title": "Branch Absolute",
+    "bits": [],
+    "format": "BRA Location",
+    "purpose": "Branch to a set absolute location",
+    "description": "The program counter is set to the specified 27-bit location.",
+    "operation": "PC = Location",
+    "flags": [
+      "None"
+    ]
+  },
+  "BRR": {
+    "title": "Branch Relative",
+    "bits": [],
+    "format": "BRR Offset",
+    "purpose": "Branch to a relative offset",
+    "description": "The 27-bit offset is added to the current program counter.",
+    "operation": "PC = PC + Offset",
+    "flags": [
+      "None"
+    ]
+  },
+  "C": {
+    "title": "Call Conditional",
+    "bits": [],
+    "format": "Ccc Offset",
+    "purpose": "Conditional call to an offset",
+    "description": "If the specified condition is true then the current program counter",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "CAA": {
+    "title": "Call Absolute",
+    "bits": [],
+    "format": "CAA Location",
+    "purpose": "Call to a set absolute location",
+    "description": "The current program counter + 4 is stored into RA and the",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "CAR": {
+    "title": "Call Relative",
+    "bits": [],
+    "format": "CAR Offset",
+    "purpose": "Call to a relative offset",
+    "description": "The current program counter + 4 is stored into RA and the",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "CM": {
+    "title": "Compare",
+    "bits": [
+      [
+        7,
+        8
+      ],
+      [
+        12,
+        13
+      ]
+    ],
+    "bytes": "10111000",
+    "format": "CM rA, rB",
+    "purpose": "Compare two registers",
+    "description": "The 27-bit values in rB is subtracted from rA. The flags are set",
+    "operation": "",
+    "flags": [
+      "Z S O C"
+    ]
+  },
+  "CMF": {
+    "title": "Compare Floating Point",
+    "bits": [
+      [
+        0,
+        7
+      ],
+      [
+        8,
+        12
+      ],
+      [
+        13,
+        17
+      ]
+    ],
+    "bytes": "10111010",
+    "format": "CMF rA, rB",
+    "purpose": "Compare two floating point registers",
+    "description": "The 27-bit floating point value in rB is subtracted from the floating point rA. The flags are set appropriately.",
+    "operation": "",
+    "flags": [
+      "Z S O"
+    ]
+  },
+  "CMFM": {
+    "title": "Compare Floating Point Multi Reg",
+    "bits": [
+      [
+        0,
+        7
+      ],
+      [
+        8,
+        12
+      ],
+      [
+        13,
+        17
+      ]
+    ],
+    "bytes": "10111110",
+    "format": "CMFM rA, rB",
+    "purpose": "Compare two floating point registers",
+    "description": "The 54-bit floating point value in rB is subtracted from the floating point rA. The flags are set appropriately.",
+    "operation": "",
+    "flags": [
+      "Z S O"
+    ]
+  },
+  "CMI": {
+    "title": "Compare Immediate",
+    "bits": [],
+    "bytes": "10111001",
+    "format": "CMI rA, IMM",
+    "purpose": "Compare a register and immediate value",
+    "description": "The sign extended immediate value is subtracted from the 27-bit",
+    "operation": "",
+    "flags": [
+      "Z S O C"
+    ]
+  },
+  "CMIM": {
+    "title": "Compare Immediate Multi Reg",
+    "bits": [],
+    "bytes": "10111101",
+    "format": "CMIM rA, IMM",
+    "purpose": "Compare a register and immediate value",
+    "description": "The sign extended immediate value is subtracted from the 54-bit",
+    "operation": "",
+    "flags": [
+      "Z S O C"
+    ]
+  },
+  "CMM": {
+    "title": "Compare Multi Reg",
+    "bits": [
+      [
+        0,
+        7
+      ],
+      [
+        8,
+        12
+      ],
+      [
+        13,
+        17
+      ]
+    ],
+    "bytes": "10111100",
+    "format": "CMM rA, rB",
+    "purpose": "Compare two registers",
+    "description": "The 54-bit values in rB",
+    "operation": "",
+    "flags": [
+      "Z S O C"
+    ]
+  },
+  "CR": {
+    "title": "Call Register Conditional",
+    "bits": [
+      [
+        9,
+        10
+      ],
+      [
+        14,
+        15
+      ]
+    ],
+    "bytes": "110111",
+    "format": "CRcc rA",
+    "purpose": "Conditional call to a register",
+    "description": "If the specified condition is true then the current program counter",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "DBRK": {
+    "title": "Debug Break",
+    "bits": [],
+    "format": "DBRK",
+    "purpose": "Debug break",
+    "description": "A special instruction for emulators to allow forcing a break in",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "DI": {
+    "title": "Disable Interrupts",
+    "bits": [],
+    "bytes": "101000000101",
+    "format": "DI rA",
+    "purpose": "Disable interrupts based on rA",
+    "description": "Disable interrupts based on the mask in rA.",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "DMT": {
+    "title": "Direct Memory Transfer",
+    "bits": [
+      [
+        6,
+        7
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        21,
+        22
+      ]
+    ],
+    "bytes": "0110100",
+    "format": "DMT rA, rB, rC",
+    "purpose": "Directly transfer memory between locations",
+    "description": "Directly transfer rC bytes of memory from location pointed to",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "DV": {
+    "title": "Divide",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001100",
+    "format": "DV rA, rB, rC",
+    "purpose": "Divide two 27-bit integer registers",
+    "description": "The 27-bit value in rB is divided with the 27-bit value in rC, the",
+    "operation": "rA ← rB / rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVF": {
+    "title": "Divide Floating Point",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001101",
+    "format": "DVF rA, rB, rC",
+    "purpose": "Divide two 27-bit floating point registers",
+    "description": "The 27-bit floating point value in rB is divided with the 27-bit",
+    "operation": "rA ← rB / rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVFM": {
+    "title": "Divide Floating Point Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001111",
+    "format": "DVFM rA, rB, rC",
+    "purpose": "Divide two 54-bit floating point registers",
+    "description": "The 54-bit floating point value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVI": {
+    "title": "Divide Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001100",
+    "format": "DVI rA, rB, IMM",
+    "purpose": "Divide a 27-bit integer register by a 7-bit immediate",
+    "description": "The 27-bit value in rB is divided with the 7-bit immediate value,",
+    "operation": "rA ← rB / IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVIM": {
+    "title": "Divide Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001110",
+    "format": "DVIM rA, rB, IMM",
+    "purpose": "Divide a 54-bit integer register by a 7-bit immediate",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVIS": {
+    "title": "Divide Immediate Signed",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001100",
+    "format": "DVIS rA, rB, IMM",
+    "purpose": "Divide a signed 27-bit integer register by a signed 7-bit immediate",
+    "description": "The signed 27-bit value in rB is divided with the signed 7-bit",
+    "operation": "rA ← (signed)rB / (signed)IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVISM": {
+    "title": "Divide Immediate Signed Multi",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001110",
+    "format": "DVISM rA, rB, IMM",
+    "purpose": "Divide a signed 54-bit integer register by a signed 7-bit immediate",
+    "description": "The signed 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVM": {
+    "title": "Divide Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001110",
+    "format": "DVM rA, rB, rC",
+    "purpose": "Divide two 54-bit integer registers",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVS": {
+    "title": "Divide Signed",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001100",
+    "format": "DVS rA, rB, rC",
+    "purpose": "Divide two signed 27-bit integer registers",
+    "description": "The signed 27-bit value in rB is divided with the signed 27-bit",
+    "operation": "rA ← (signed)rB / (signed)rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "DVSM": {
+    "title": "Divide Signed Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001110",
+    "format": "DVSM rA, rB, rC",
+    "purpose": "Divide two 54-bit integer registers",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "EI": {
+    "title": "Enable Interrupts",
+    "bits": [],
+    "bytes": "101000000100",
+    "format": "EI rA",
+    "purpose": "Enable interrupts base on rA",
+    "description": "Enable interrupts based on the mask in rA.",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "FTI": {
+    "title": "Float to Integer",
+    "bits": [],
+    "bytes": "101000101",
+    "format": "FTI rA, rB",
+    "purpose": "Convert a 27-bit float to integer",
+    "description": "The 27-bit float in rB in converted to a 27-bit integer value and",
+    "operation": "rA ← int(rB)",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "FTIM": {
+    "title": "Float to Integer Multi Reg",
+    "bits": [],
+    "bytes": "101000111",
+    "format": "FTIM rA, rB",
+    "purpose": "Convert a 54-bit float to integer",
+    "description": "The 54-bit float in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "HT": {
+    "title": "Halt",
+    "bits": [],
+    "format": "HT",
+    "purpose": "Halt the processor",
+    "description": "Disables all interrupts and stops the processor from responding",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "IR": {
+    "title": "Interrupt Return",
+    "bits": [],
+    "format": "IR",
+    "purpose": "Return from an interrupt",
+    "description": "Return from an interrupt routine.",
+    "operation": "",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ITF": {
+    "title": "Integer to Float",
+    "bits": [],
+    "bytes": "101000100",
+    "format": "ITF rA, rB",
+    "purpose": "Convert a 27-bit integer to float",
+    "description": "The 27-bit integer in rB in converted to a 27-bit float value and",
+    "operation": "rA ← float(rB)",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ITFM": {
+    "title": "Integer to Float Multi Reg",
+    "bits": [],
+    "bytes": "101000110",
+    "format": "ITFM rA, rB",
+    "purpose": "Convert a 54-bit integer to float",
+    "description": "The 54-bit integer in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "LDS": {
+    "title": "Load Single",
+    "bits": [],
+    "bytes": "1010100",
+    "format": "LDSm rA, [rB + Offset, RegCount]",
+    "purpose": "Load a single byte from memory",
+    "description": "The value in rB is added to Offset and a single byte per register",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "LDT": {
+    "title": "Load Tri",
+    "bits": [],
+    "bytes": "1010110",
+    "format": "LDTm rA, [rB + Offset, RegCount]",
+    "purpose": "Load three bytes from memory",
+    "description": "The value in rB is added to Offset and three bytes per register",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "LDW": {
+    "title": "Load Word",
+    "bits": [],
+    "bytes": "1010101",
+    "format": "LDWm rA, [rB + Offset, RegCount]",
+    "purpose": "Load two bytes from memory",
+    "description": "The value in rB is added to Offset and two bytes per register are",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "MD": {
+    "title": "Modulus",
+    "bits": [
+      [
+        6,
+        7
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        21,
+        22
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0010000",
+    "format": "MD rA, rB, rC",
+    "purpose": "Access the remainder of dividing two 27-bit integer registers",
+    "description": "The 27-bit value in rB is divided with the 27-bit value in rC, the",
+    "operation": "rA ← rB % rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDF": {
+    "title": "Modulus Floating Point",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0010001",
+    "format": "MDF rA, rB, rC",
+    "purpose": "Access the remainder of dividing two 27-bit floating point registers",
+    "description": "The 27-bit floating point value in rB is divided with the 27-bit",
+    "operation": "rA ← rB % rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDFM": {
+    "title": "Modulus Floating Point Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0010011",
+    "format": "MDFM rA, rB, rC",
+    "purpose": "Access the remainder of dividing two 54-bit floating point registers",
+    "description": "The 54-bit floating point value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDI": {
+    "title": "Modulus Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0010000",
+    "format": "MDI rA, rB, IMM",
+    "purpose": "Access the remainder of dividing a 27-bit integer register by a 7-bit",
+    "description": "The 27-bit value in rB is divided with a 7-bit immediate value,",
+    "operation": "rA ← rB % IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDIM": {
+    "title": "Modulus Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0010010",
+    "format": "MDIM rA, rB, IMM",
+    "purpose": "Access the remainder of dividing a 54-bit integer register by a 7-bit",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDIS": {
+    "title": "Modulus Immediate Signed",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0010000",
+    "format": "MDIS rA, rB, IMM",
+    "purpose": "Access the remainder of dividing a signed 27-bit integer register by",
+    "description": "The signed 27-bit value in rB is divided with a signed 7-bit immediate value, the remainder of the division is placed in rA.",
+    "operation": "rA ← (signed)rB % (signed)IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDISM": {
+    "title": "Modulus Immediate Signed Multi",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0010010",
+    "format": "MDISM rA, rB, IMM",
+    "purpose": "Access the remainder of dividing a signed 54-bit integer register by",
+    "description": "The signed 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDM": {
+    "title": "Modulus Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0010010",
+    "format": "MDM rA, rB, rC",
+    "purpose": "Access the remainder of dividing two 54-bit integer registers",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDS": {
+    "title": "Modulus Signed",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0010000",
+    "format": "MDS rA, rB, rC",
+    "purpose": "Access the remainder of dividing two signed 27-bit integer registers",
+    "description": "The signed 27-bit value in rB is divided with the signed 27-bit",
+    "operation": "rA ← (signed)rB % (signed)rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MDSM": {
+    "title": "Modulus Signed Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0010010",
+    "format": "MDSM rA, rB, rC",
+    "purpose": "Access the remainder of dividing two signed 54-bit integer registers",
+    "description": "The signed 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MH": {
+    "title": "Move High",
+    "bits": [],
+    "bytes": "10001",
+    "format": "MH rA, IMM",
+    "purpose": "Move an immediate value to the high bits of a register",
+    "description": "The high 17 bits of a 27-bit value in rA is set to the specified",
+    "operation": "rA ← (IMM << 10) | (rA & 0x3FF)",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ML": {
+    "title": "Move Low",
+    "bits": [],
+    "bytes": "10010",
+    "format": "ML rA, IMM",
+    "purpose": "Move a 17-bit immediate value to the register",
+    "description": "A 27-bit rA is set to the specified 17-bit immediate value. The",
+    "operation": "rA ← IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MS": {
+    "title": "Move Low Signed",
+    "bits": [],
+    "bytes": "10011",
+    "format": "MS rA, IMM",
+    "purpose": "Move a signed 17-bit immediate value to the register",
+    "description": "A 27-bit rA is set to the specified signed 17-bit immediate value.",
+    "operation": "rA ← (signed)IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MU": {
+    "title": "Multiply",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001000",
+    "format": "MU rA, rB, rC",
+    "purpose": "Multiply two 27-bit integer registers together",
+    "description": "The 27-bit value in rC is multiplied with the 27-bit value in rB,",
+    "operation": "rA ← rB * rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUF": {
+    "title": "Multiply Floating Point",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001001",
+    "format": "MUF rA, rB, rC",
+    "purpose": "Multiply two 27-bit floating point registers together",
+    "description": "The 27-bit floating point value in rC is multiplied with the 27-bit",
+    "operation": "rA ← rB * rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUFM": {
+    "title": "Multiply Floating Point Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001011",
+    "format": "MUFM rA, rB, rC",
+    "purpose": "Multiply two 54-bit floating point registers together",
+    "description": "The 54-bit floating point value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUI": {
+    "title": "Multiply Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001000",
+    "format": "MUI rA, rB, IMM",
+    "purpose": "Multiply a 27-bit integer register by a 7-bit immediate",
+    "description": "The 7-bit immediate value is multiplied with the 27-bit value in",
+    "operation": "rA ← rB * IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUIM": {
+    "title": "Multiply Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001010",
+    "format": "MUIM rA, rB, IMM",
+    "purpose": "Multiply a 54-bit integer register by a 7-bit immediate",
+    "description": "The 7-bit immediate value is multiplied with the 54-bit value in",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUIS": {
+    "title": "Multiply Immediate Signed",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001000",
+    "format": "MUIS rA, rB, IMM",
+    "purpose": "Multiply a signed 27-bit integer register by a signed 7-bit immediate",
+    "description": "The signed 7-bit immediate value is multiplied with the signed",
+    "operation": "rA ← (signed)rB * (signed)IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUISM": {
+    "title": "Multiply Immediate Signed Multi",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0001010",
+    "format": "MUISM rA, rB, IMM",
+    "purpose": "Multiply a signed 54-bit integer register by a signed 7-bit immediate",
+    "description": "The signed 7-bit immediate value is multiplied with the signed",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUM": {
+    "title": "Multiply Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001010",
+    "format": "MUM rA, rB, rC",
+    "purpose": "Multiply two 54-bit integer registers together",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUS": {
+    "title": "Multiply Signed",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001000",
+    "format": "MUS rA, rB, rC",
+    "purpose": "Multiply two signed 27-bit integer registers together",
+    "description": "The signed 27-bit value in rC is multiplied with the signed 27-bit",
+    "operation": "rA ← (signed)rB * (signed)rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "MUSM": {
+    "title": "Multiply Signed Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0001010",
+    "format": "MUSM rA, rB, rC",
+    "purpose": "Multiply two 54-bit integer registers together",
+    "description": "The signed 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "NG": {
+    "title": "Negate",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001100",
+    "format": "NG rA, rB",
+    "purpose": "Negate a 27-bit register",
+    "description": "Negate the 27-bit rB register value and store the result in rA.",
+    "operation": "rA ← -rB",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "NGF": {
+    "title": "Negate Floating Point",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001101",
+    "format": "NGF rA, rB",
+    "purpose": "Negate a 27-bit floating-point register",
+    "description": "Negate the 27-bit rB floating-point register value and store the",
+    "operation": "rA ← -rB",
+    "flags": [
+      "Z S"
+    ]
+  },
+  "NGFM": {
+    "title": "Negate Floating Point Multi Reg",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001111",
+    "format": "NGFM rA, rB",
+    "purpose": "Negate a 54-bit floating-point register",
+    "description": "Negate the 54-bit rB",
+    "operation": "rA",
+    "flags": [
+      "Z S"
+    ]
+  },
+  "NGM": {
+    "title": "Negate Multi Reg",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001110",
+    "format": "NGM rA, rB",
+    "purpose": "Negate a 54-bit register",
+    "description": "Negate the 54-bit rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "NT": {
+    "title": "Not",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001100",
+    "format": "NT rA, rB",
+    "purpose": "Bit test a 27-bit register",
+    "description": "Test all bits of the 27-bit rB register value. If any bits are set",
+    "operation": "rA ← !rB",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "NTM": {
+    "title": "Not Multi Reg",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001110",
+    "format": "NTM rA, rB",
+    "purpose": "Bit test a 54-bit register",
+    "description": "Test all bits of the 54-bit rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "OR": {
+    "title": "Or",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0011000",
+    "format": "OR rA, rB, rC",
+    "purpose": "Bit-wise OR two 27-bit integer registers together",
+    "description": "The 27-bit value in rC is bit-wise OR to the 27-bit value in rB,",
+    "operation": "rA ← rB | rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ORI": {
+    "title": "Or Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0011000",
+    "format": "ORI rA, rB, IMM",
+    "purpose": "Bit-wise OR a 27-bit integer register and 7-bit immediate together",
+    "description": "The 7-bit immediate value is bit-wise OR to the 27-bit value in",
+    "operation": "rA ← rB | IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ORM": {
+    "title": "Or Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0011010",
+    "format": "ORM rA, rB, rC",
+    "purpose": "Bit-wise OR two 54-bit integer registers together",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RE": {
+    "title": "Return",
+    "bits": [],
+    "format": "RE",
+    "purpose": "To return from a call",
+    "description": "To return from a call.",
+    "operation": "PC ← RETADDR",
+    "flags": [
+      "None"
+    ]
+  },
+  "RF": {
+    "title": "Read Flags",
+    "bits": [],
+    "bytes": "101000001100",
+    "format": "RF rA",
+    "purpose": "Read flags into the rA register",
+    "description": "Set rA to the value in the flag register.",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "RL": {
+    "title": "Rotate Left",
+    "bits": [
+      [
+        6,
+        7
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        21,
+        22
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0110000",
+    "format": "RL rA, rB, rC",
+    "purpose": "Rotate left a 27-bit integer",
+    "description": "The 27-bit value in rB is left rotated the number of bits specified",
+    "operation": "rA ← (rB << rC) | (rB >> (27-rC))",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RLI": {
+    "title": "Rotate Left Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "1000000",
+    "format": "RLI rA, rB, IMM",
+    "purpose": "Rotate left a 27-bit integer by a 7-bit immediate value",
+    "description": "The 27-bit value in rB is left rotated by the 7-bit immediate",
+    "operation": "rA ← (rB << IMM) | (rB >> (27-IMM))",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RLIM": {
+    "title": "Rotate Left Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "1000010",
+    "format": "RLIM rA, rB, IMM",
+    "purpose": "Rotate left a 54-bit integer by a 7-bit immediate value",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RLM": {
+    "title": "Rotate Left Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0110010",
+    "format": "RLM rA, rB, rC",
+    "purpose": "Rotate left a 54-bit integer",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RMP": {
+    "title": "Read Memory Protection",
+    "bits": [],
+    "bytes": "1010010",
+    "format": "RMP rA, rB",
+    "purpose": "Read the memory protections for a page of memory",
+    "description": "rA is set to the page protection flags of the pages of the specified",
+    "operation": "",
+    "flags": [
+      "Z"
+    ]
+  },
+  "RND": {
+    "title": "Random",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001100",
+    "format": "RND rA",
+    "purpose": "Generate a random value into rA",
+    "description": "A random value is placed into the 27-bit rA register.",
+    "operation": "rA ← <random value>",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RNDM": {
+    "title": "Random Multi Reg",
+    "bits": [
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "101001110",
+    "format": "RNDM rA",
+    "purpose": "Generate a random value into rA",
+    "description": "A random value is generated and placed into the 54-bit rA",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RR": {
+    "title": "Rotate Right",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0110001",
+    "format": "RR rA, rB, rC",
+    "purpose": "Rotate right a 27-bit integer",
+    "description": "The 27-bit value in rB is right rotated the number of bits specified",
+    "operation": "rA ← (rB >> rC) | (rB << (27-rC))",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RRI": {
+    "title": "Rotate Right Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "1000001",
+    "format": "RRI rA, rB, IMM",
+    "purpose": "Rotate right a 27-bit integer by a 7-bit immediate value",
+    "description": "The 27-bit value in rB is right rotated by the 7-bit immediate",
+    "operation": "rA ← (rB >> IMM) | (rB << (27-IMM))",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RRIM": {
+    "title": "Rotate Right Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "1000011",
+    "format": "RRIM rA, rB, rC",
+    "purpose": "Rotate right a 54-bit integer by an immediate value",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "RRM": {
+    "title": "Rotate Right Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0110011",
+    "format": "RRM rA, rB, rC",
+    "purpose": "Rotate right a 54-bit integer",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SA": {
+    "title": "Shift Arithemetic Right",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0101101",
+    "format": "SA rA, rB, rC",
+    "purpose": "Shift right arithmetic a 27-bit integer",
+    "description": "The 27-bit value in rB is right arithmetic shifted the number of",
+    "operation": "rA ← (signed)rB >> rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SAI": {
+    "title": "Shift Arithemetic Right Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0111101",
+    "format": "SAI rA, rB, IMM",
+    "purpose": "Shift right arithmetic a 27-bit integer by a 7-bit immediate value",
+    "description": "The 27-bit value in rB is right arithmetic shifted by the 7-bit",
+    "operation": "rA ← (signed)rB >> IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SAIM": {
+    "title": "Shift Arithemetic Right Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0111111",
+    "format": "SAIM rA, rB, IMM",
+    "purpose": "Shift right arithmetic a 54-bit integer by a 7-bit immediate value",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SAM": {
+    "title": "Shift Arithemetic Right Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0101111",
+    "format": "SAM rA, rB, rC",
+    "purpose": "Shift right arithmetic a 54-bit integer",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SB": {
+    "title": "Subtract",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000100",
+    "format": "SB rA, rB, rC",
+    "purpose": "Subtract two 27-bit integer registers from each other",
+    "description": "The 27-bit value in rC is subtracted from the 27-bit value in rB,",
+    "operation": "rA ← rB - rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBC": {
+    "title": "Subtract With Carry",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0100100",
+    "format": "SBC rA, rB, rC",
+    "purpose": "Subtract two 27-bit integer registers from each other including the",
+    "description": "The 27-bit value in rC is subtracted from the 27-bit value in rB,",
+    "operation": "rA ← rB - rC - Carry_Bit",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBCI": {
+    "title": "Subtract Immediate With Carry",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0100100",
+    "format": "SBCI rA, rB, IMM",
+    "purpose": "Subtract a 7-bit immediate from a 27-bit integer register including",
+    "description": "The 7-bit immediate value is subtracted from the 27-bit value",
+    "operation": "rA ← rB - IMM - Carry_Bit",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBCIM": {
+    "title": "Subtract Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0100110",
+    "format": "SBCIM rA, rB, IMM",
+    "purpose": "Subtract a 7-bit immediate from a 54-bit integer register including",
+    "description": "The 7-bit immediate value is subtracted from the 54-bit value",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBCM": {
+    "title": "Subtract Multi Reg With Carry",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0100110",
+    "format": "SBCM rA, rB, rC",
+    "purpose": "Subtracted two 54-bit integer registers from each other including the",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBF": {
+    "title": "Subtract Floating Point",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000101",
+    "format": "SBF rA, rB, rC",
+    "purpose": "Subtract two 27-bit floating point registers from each other",
+    "description": "The 27-bit floating point value in rC is subtracted from to the",
+    "operation": "rA ← rB - rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBFM": {
+    "title": "Subtract Floating Point Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000111",
+    "format": "SBFM rA, rB, rC",
+    "purpose": "Subtract two 54-bit floating point registers from each other",
+    "description": "The 54-bit floating point value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBI": {
+    "title": "Subtract Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0000100",
+    "format": "SBI rA, rB, IMM",
+    "purpose": "Subtract a 7-bit immediate value from a 27-bit integer register",
+    "description": "The 7-bit immediate value is subtracted from the 27-bit value in",
+    "operation": "rA ← rB - IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBIM": {
+    "title": "Subtract Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0000110",
+    "format": "SBIM rA, rB, IMM",
+    "purpose": "Subtract a 7-bit immediate value from a 54-bit integer register",
+    "description": "The 7-bit immediate value is subtracted from the 54-bit value in",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SBM": {
+    "title": "Subtract Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0000110",
+    "format": "SBM rA, rB, rC",
+    "purpose": "Subtracted two 54-bit integer registers from each other",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SES": {
+    "title": "Sign Extend Single",
+    "bits": [
+      [
+        0,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        26
+      ]
+    ],
+    "bytes": "101000000111",
+    "format": "SES rA, rB",
+    "purpose": "Sign extend from a byte",
+    "description": "Sign extend a single byte from register rB into the 27-bit rA.",
+    "operation": "rA ← (signed)(rB << 18) >> 18",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SEW": {
+    "title": "Sign Extend Word",
+    "bits": [
+      [
+        0,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        26
+      ]
+    ],
+    "bytes": "101000001000",
+    "format": "SEW rA, rB",
+    "purpose": "Sign extend from two bytes",
+    "description": "Sign extend a 18-bit value from register rB into the 27-bit rA.",
+    "operation": "rA ← (signed)(rB << 9) >> 9",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SF": {
+    "title": "Set Flags",
+    "bits": [],
+    "bytes": "101000001011",
+    "format": "SF rA",
+    "purpose": "Set flag register to rA",
+    "description": "Set the flag register to the value in rA.",
+    "operation": "",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SL": {
+    "title": "Shift Left",
+    "bits": [
+      [
+        6,
+        7
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        21,
+        22
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0101000",
+    "format": "SL rA, rB, rC",
+    "purpose": "Shift left a 27-bit integer",
+    "description": "The 27-bit value in rB is left shifted the number of bits specified",
+    "operation": "rA ← rB << rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SLI": {
+    "title": "Shift Left Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0111000",
+    "format": "SLI rA, rB, IMM",
+    "purpose": "Shift left a 27-bit integer by a 7-bit immediate value",
+    "description": "The 27-bit value in rB is left shifted by the 7-bit immediate value.",
+    "operation": "rA ← rB << IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SLIM": {
+    "title": "Shift Left Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0111010",
+    "format": "SLIM rA, rB, IMM",
+    "purpose": "Shift left a 54-bit integer by a 7-bit immediate value",
+    "description": "The 54-bit value in rB is left shifted by the 7-bit immediate value.",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SLM": {
+    "title": "Shift Left Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0101010",
+    "format": "SLM rA, rB, rC",
+    "purpose": "Shift left a 54-bit integer",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SMP": {
+    "title": "Set Memory Protection",
+    "bits": [],
+    "bytes": "1010010",
+    "format": "SMP rA, rB, FLAGS",
+    "purpose": "Set the memory protections for a range of pages of memory",
+    "description": "Memory starting at a page boundary specified by rA has its",
+    "operation": "",
+    "flags": [
+      "Z"
+    ]
+  },
+  "SR": {
+    "title": "Shift Right",
+    "bits": [
+      [
+        6,
+        7
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        21,
+        22
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0101001",
+    "format": "SR rA, rB, rC",
+    "purpose": "Shift right a 27-bit integer",
+    "description": "The 27-bit value in rB is right shifted the number of bits specified",
+    "operation": "rA ← rB >> rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SRI": {
+    "title": "Shift Right Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0111001",
+    "format": "SRI rA, rB, IMM",
+    "purpose": "Shift right a 27-bit integer by a 7-bit immediate value",
+    "description": "The 27-bit value in rB is right shifted by the 7-bit immediate",
+    "operation": "rA ← rB >> IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SRIM": {
+    "title": "Shift Right Immediate Multi Reg",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0111011",
+    "format": "SRIM rA, rB, IMM",
+    "purpose": "Shift right a 54-bit integer by a 7-bit immediate value",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "SRM": {
+    "title": "Shift Right Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0101011",
+    "format": "SRM rA, rB, rC",
+    "purpose": "Shift right a 54-bit integer",
+    "description": "The 54-bit value in rB",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "STS": {
+    "title": "Store Single",
+    "bits": [],
+    "bytes": "1011000",
+    "format": "STSm rA, [rB + Offset, RegCount]",
+    "purpose": "Store a single byte into memory",
+    "description": "The value in rB is added to Offset and a single byte per register",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "STT": {
+    "title": "Store Tri",
+    "bits": [],
+    "bytes": "1011010",
+    "format": "STTm rA, [rB + Offset, RegCount]",
+    "purpose": "Store three bytes into memory",
+    "description": "The value in rB is added to Offset and a three bytes per register",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "STW": {
+    "title": "Store Word",
+    "bits": [],
+    "bytes": "1011001",
+    "format": "STWm rA, [rB + Offset, RegCount]",
+    "purpose": "Store two bytes into memory",
+    "description": "The value in rB is added to Offset and a two bytes per register",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "WT": {
+    "title": "Wait",
+    "bits": [],
+    "format": "WT",
+    "purpose": "Wait for interrupt",
+    "description": "Pauses the processor until an interrupt fires.",
+    "operation": "",
+    "flags": [
+      "None"
+    ]
+  },
+  "XR": {
+    "title": "Xor",
+    "bits": [
+      [
+        6,
+        7
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        21,
+        22
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0011100",
+    "format": "XR rA, rB, rC",
+    "purpose": "Bit-wise eXclusive OR two 27-bit integer registers together",
+    "description": "The 27-bit value in rC is bit-wise eXclusive OR to the 27-bit",
+    "operation": "rA ← rB ^ rC",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "XRI": {
+    "title": "Xor Immediate",
+    "bits": [
+      [
+        23,
+        24
+      ],
+      [
+        25,
+        26
+      ]
+    ],
+    "bytes": "0011100",
+    "format": "XRI rA, rB, IMM",
+    "purpose": "Bit-wise Exclusive OR a 27-bit integer register and 7-bit immediate",
+    "description": "The 7-bit immediate value is bit-wise Exclusive OR to the 27-bit",
+    "operation": "rA ← rB ^ IMM",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "XRM": {
+    "title": "Xor Multi Reg",
+    "bits": [
+      [
+        0,
+        6
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        25
+      ]
+    ],
+    "bytes": "0011110",
+    "format": "XRM rA, rB, rC",
+    "purpose": "Bit-wise eXclusive OR two 54-bit integer registers together",
+    "description": "The 54-bit value in rC",
+    "operation": "rA",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ZES": {
+    "title": "Zero Extend Single",
+    "bits": [
+      [
+        0,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        26
+      ]
+    ],
+    "bytes": "101000001001",
+    "format": "ZES rA, rB",
+    "purpose": "Zero extend from a byte",
+    "description": "Zero extend a single byte from register rB into the 27-bit rA.",
+    "operation": "rA ← rB & 0x00001FF",
+    "flags": [
+      "Z C O S"
+    ]
+  },
+  "ZEW": {
+    "title": "Zero Extend Word",
+    "bits": [
+      [
+        0,
+        11
+      ],
+      [
+        12,
+        16
+      ],
+      [
+        17,
+        21
+      ],
+      [
+        22,
+        26
+      ]
+    ],
+    "bytes": "101000001010",
+    "format": "ZEW rA, rB",
+    "purpose": "Zero extend from two bytes",
+    "description": "Zero extend a 18-bit value from register rB into the 27-bit rA.",
+    "operation": "rA ← rB & 0x003FFFF",
+    "flags": [
+      "Z C O S"
+    ]
+  }
+}
