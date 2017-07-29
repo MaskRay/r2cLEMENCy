@@ -196,7 +196,6 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 		}
 		break;
 	case CLCY_BF: // Bit flip
-		imm  = (ut32 *)(buf + 1);
 		op->type = R_ANAL_OP_TYPE_NOT;
 		op->size = 3;
 		r_strbuf_setf(&op->esil,"%s,%s,!=,",rB, rA);

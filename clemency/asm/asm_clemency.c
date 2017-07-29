@@ -63,7 +63,7 @@ static void asm_clemency_getreg(const ut8 *buf, int index, char *reg_str, int ma
 }
 
 // return new offset
-static int dump_9bit(ut8 *buf, int bitoff) {
+static int dump_9bit(const ut8 *buf, int bitoff) {
 	ut9 i;
 	int offset = bitoff + 9; // bit level offset
 	static char b[16] = { 0 };
@@ -79,7 +79,7 @@ static int dump_9bit(ut8 *buf, int bitoff) {
 	return offset;
 }
 
-static int dump_27bit(ut8 *buf, int bitoff) {
+static int dump_27bit(const ut8 *buf, int bitoff) {
 	ut27 i;
 	int offset = bitoff + 27; // bit level offset
 	static char b[32] = { 0 };
