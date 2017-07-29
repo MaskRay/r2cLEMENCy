@@ -69,7 +69,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 	r_strbuf_init (&op->esil);
 	// Wrong - it also has subopcode
 	// or run decode function here?
-	op->size = decode_byte(buf, anal->bitshift, &inst) / 9;
+	op->size = decode_byte (buf, anal->bitshift, &inst) / 9;
 	opcode = inst.mnemonic;
 	rA = get_reg_name(inst.rA);
 	rB = get_reg_name(inst.rB);

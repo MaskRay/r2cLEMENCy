@@ -98,7 +98,7 @@ static int dump_27bit(const ut8 *buf, int bitoff) {
 static int disassemble(RAsm *a, RAsmOp *op, const ut8 *buf, int len) {
 	char *rA, *rB, *rC;
 	ut16 tmp;
-	st32 imm = 0;
+	st64 imm = 0;
 	const char *c;
 	int cond = 0;
 	int opcode = 0;
