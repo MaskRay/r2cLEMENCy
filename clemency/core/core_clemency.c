@@ -27,8 +27,10 @@ static void hexdump_9byte(RCore *core, const char *arg) {
 	int i, offset = 0; // bit level offset
 	for (i = 0; i < core->blocksize - 1; i++) {
 		ut9 byte9 = r_read_me9 (core->block, (i * 8) + offset);
-		r_cons_printf ("0x%08"PFMT64x" + %d  %03x\n",
-			core->offset + i, offset, byte9);
+		if (i % 12 == 0) {
+			r_cons_printf ("\n0x%08"PFMT64x":", core->offset + i);
+		}
+		r_cons_printf (" %03x", byte9);
 		offset = (offset + 1) % 8;
 	}
 }
@@ -37,18 +39,22 @@ static void hexdump_18word(RCore *core, const char *arg) {
 	int i, offset = 0; // bit level offset
 	for (i = 0; i < core->blocksize - 1 ; i++) {
 		ut18 word18 = r_read_me18 (core->block, (i * 8) + offset);
-		r_cons_printf ("0x%08"PFMT64x" + %d  %06"PFMT32x"\n",
-			core->offset + i, offset, word18);
+		if (i % 6 == 0) {
+			r_cons_printf ("\n0x%08"PFMT64x":", core->offset + i);
+		}
+		r_cons_printf (" %05"PFMT32x"", word18);
 		offset = (offset + 1) % 8;
 	}
 }
 
 static void hexdump_27tri(RCore *core, const char *arg) {
 	int i, offset = 0; // bit level offset
-	for (i = 0; i < core->blocksize -1 ; i++) {
+	for (i = 0; i < core->blocksize - 2 ; i++) {
 		ut27 word27 = r_read_me27 (core->block, (i * 8) + offset);
-		r_cons_printf ("0x%08"PFMT64x" + %d  %09"PFMT32x"\n",
-			core->offset + i, offset, word27);
+		if (i % 4 == 0) {
+			r_cons_printf ("\n0x%08"PFMT64x":", core->offset + i);
+		}
+		r_cons_printf (" %07"PFMT32x"", word27);
 		offset = (offset + 1) % 8;
 	}
 }
@@ -75,7 +81,7 @@ static int r_cmd_clemency(struct r_core_t *core, const char *str) {
 				hexdump_18word (core, str);
 				break;
 			case 't':
-				hexdump_18word (core, str);
+				hexdump_27tri (core, str);
 				break;
 			default:
 				hexdump_9byte (core, str);
@@ -91,7 +97,7 @@ static int r_cmd_clemency(struct r_core_t *core, const char *str) {
 				hexdump_18word (core, str);
 				break;
 			case 't':
-				hexdump_18word (core, str);
+				hexdump_27tri (core, str);
 				break;
 			}
 			break;
