@@ -73,31 +73,30 @@ static int r_cmd_clemency(struct r_core_t *core, const char *str) {
 			break;
 		case 'x':
 			switch (str[2]) {
-			case 'b':
-			case 'x':
-				hexdump_9byte (core, str);
-				break;
 			case 'w':
 				hexdump_18word (core, str);
 				break;
 			case 't':
 				hexdump_27tri (core, str);
 				break;
+			case 'b':
+			case 'x':
 			default:
 				hexdump_9byte (core, str);
 			}
 			break;
 		case 'p':
 			switch (str[2]) {
-			case 'b':
-			case 'x':
-				hexdump_9byte (core, str);
-				break;
 			case 'w':
 				hexdump_18word (core, str);
 				break;
 			case 't':
 				hexdump_27tri (core, str);
+				break;
+			case 'b':
+			case 'x':
+			defaut:
+				hexdump_9byte (core, str);
 				break;
 			}
 			break;
