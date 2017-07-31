@@ -14,6 +14,7 @@ DEPS+=anal/anal_clemency.$(LIBEXT)
 DEPS+=bin/bin_clemency.$(LIBEXT)
 DEPS+=core/core_clemency.$(LIBEXT)
 DEPS+=io/io_clemency.$(LIBEXT)
+DEPS+=io/io_9bit.$(LIBEXT)
 DEPS+=debug/debug_clcy.$(LIBEXT)
 
 all: $(DEPS)
@@ -33,6 +34,9 @@ core/core_clemency.$(LIBEXT): core/core_clemency.c
 
 io/io_clemency.$(LIBEXT): io/io_clemency.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o io/io_clemency.$(LIBEXT) io/io_clemency.c
+
+io/io_9bit.$(LIBEXT): io/io_9bit.c
+	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o io/io_9bit.$(LIBEXT) io/io_9bit.c
 
 debug/debug_clcy.$(LIBEXT): debug/debug_clcy.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o debug/debug_clcy.$(LIBEXT) debug/debug_clcy.c
