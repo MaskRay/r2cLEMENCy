@@ -48,7 +48,7 @@ char *get_reg_name(int reg_index)
 	return NULL;
 }
 
-static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int len) {
+static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len) {
 	char *rA, *rB, *rC;
 	st32 imm = 0;
 	ut8 opcode = 0;
@@ -69,6 +69,13 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 	r_strbuf_init (&op->esil);
 	// Wrong - it also has subopcode
 	// or run decode function here?
+	char *buf = malloc (len);
+	
+	int i, d = 0;
+	for (i = 0; i < len; i += 16) {
+		r_mem_copybits_delta (buf, d, src, i, 9);
+		d += 9;
+	}
 	op->size = decode_byte (buf, anal->bitshift, &inst) / 9;
 	opcode = inst.mnemonic;
 	rA = get_reg_name(inst.rA);
@@ -863,7 +870,8 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *buf, int 
 		r_strbuf_setf (&op->esil, "nop");
 		break;
 	}
-	anal->bitshift = (op->size * 9 + anal->bitshift) % 8;
+	anal->bitshift = 0; //(op->size * 9 + anal->bitshift) % 8;
+	free (buf);
 	return op->size;
 }
 

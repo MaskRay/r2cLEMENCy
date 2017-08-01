@@ -17,8 +17,7 @@ char* regs[] = {
 	"r25", "r26", "r27", "r28", "st", "ra", "pc"
 };
 
-char *get_reg_name(int reg_index)
-{
+static const char *get_reg_name(int reg_index) {
 	if (reg_index < sizeof(regs)) {
 		return regs[reg_index];
 	}
@@ -95,7 +94,7 @@ static int dump_27bit(const ut8 *buf, int bitoff) {
 	return offset;
 }
 
-static int disassemble(RAsm *a, RAsmOp *op, const ut8 *buf, int len) {
+static int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {
 	char *rA, *rB, *rC;
 	ut16 tmp;
 	st64 imm = 0;
@@ -103,11 +102,20 @@ static int disassemble(RAsm *a, RAsmOp *op, const ut8 *buf, int len) {
 	int cond = 0;
 	int opcode = 0;
 	int count = 0;
+	char *buf = malloc (len);
+	
+	int i, d = 0;
+	for (i = 0; i < len; i += 16) {
+		r_mem_copybits_delta (buf, d, src, i, 9);
+		d += 9;
+	}
 
 	decode_result_t inst;
-	dump_9bit(buf, 0);
-	op->bitsize = decode_byte(buf, a->bitshift, &inst);
-	op->size = op->bitsize / 9;
+	dump_9bit (buf, 0);
+	op->bitsize = decode_byte (buf, a->bitshift, &inst);
+	// op->size = op->bitsize / 9;
+	op->size = op->bitsize / 8;
+	op->bitsize = 0;
 	opcode = inst.mnemonic;
 	rA = get_reg_name(inst.rA);
 	rB = get_reg_name(inst.rB);
@@ -713,6 +721,7 @@ static int disassemble(RAsm *a, RAsmOp *op, const ut8 *buf, int len) {
 		snprintf(op->buf_asm, 64, "invalid");
 		break;
 	}
+	free (buf);
 	eprintf("{OLD} bitshift = %d ; bitsize = %d\n", a->bitshift, op->bitsize);
 	a->bitshift = (op->bitsize + a->bitshift) % 8;
 	eprintf("{NEW} bitshift = %d ; size = %d\n", a->bitshift, op->size);
