@@ -7,8 +7,17 @@
 
 #include "../include/clcy_mem.h"
 
+static bool use_9bit = false;
+
 static bool check_bytes(const ut8 *buf, ut64 length) {
-	return true;
+	if (buf[0] == 0x2c && buf[1] == 0x31) {
+		// using 9bit io
+		use_9bit = true;
+		return true;
+	}
+	use_9bit = false;
+	// using plain io
+	return (buf[0] == 0x20 && buf[1] == 0x56);
 }
 
 static void *load_bytes(RBinFile *arch, const ut8 *buf, ut64 sz, ut64 loadaddr, Sdb *sdb) {

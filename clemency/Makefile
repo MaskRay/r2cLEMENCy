@@ -19,6 +19,7 @@ DEPS+=debug/debug_clcy.$(LIBEXT)
 
 all: $(DEPS)
 	$(MAKE) install
+	r2 -a clcy -b 27 9bit://../third_party/clemency/hello.bin
 
 asm/asm_clemency.$(LIBEXT): asm/asm_clemency.c asm/asm-desc.kv
 	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o asm/asm_clemency.$(LIBEXT) asm/asm_clemency.c
