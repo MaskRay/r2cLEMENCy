@@ -8,7 +8,7 @@
 #include <string.h>
 #include <r_anal.h>
 
-#include "../include/clcy_mem.h"
+#include "../include/clemency.h"
 
 #undef R_API
 #define R_API static
