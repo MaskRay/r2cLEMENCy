@@ -171,8 +171,8 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE_E (cmi, CMP, "%d,%s,==", imm, rA); // XXX
 		TYPE (cmim, CMP);
 		TYPE (cmm, CMP);
-		TYPE (dbrk, TRAP);
-		TYPE (di, SWI);
+		TYPE_E (dbrk, TRAP, "0,%d,$", R_ANAL_TRAP_BREAKPOINT);
+		TYPE_E (di, SWI, "%d,$", I_di);
 		TYPE (dmt, MOV);
 		TYPE_E (dv, DIV, "%d,%s,/,%s,=", imm, rB, rA);
 		TYPE (dvf, DIV);
@@ -184,10 +184,10 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (dvm, DIV);
 		TYPE (dvs, DIV);
 		TYPE (dvsm, DIV);
-		TYPE (ei, SWI);
+		TYPE_E (ei, SWI, "%d,$", I_di);
 		TYPE (fti, MOV);
 		TYPE (ftim, MOV);
-		TYPE (ht, TRAP);
+		TYPE_E (ht, TRAP, "0,%d,$", R_ANAL_TRAP_HALT);
 		TYPE (ir, RET);
 		TYPE (itf, MOV);
 		TYPE (itfm, MOV);
@@ -231,9 +231,9 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (rli, ROL);
 		TYPE (rlim, ROL);
 		TYPE (rlm, ROL);
-		TYPE (rmp, SWI);
-		TYPE (rnd, SWI);
-		TYPE (rndm, SWI);
+		TYPE_E (rmp, SWI, "%d,$", I_rmp);
+		TYPE_E (rnd, SWI, "%d,$", I_rnd);
+		TYPE_E (rndm, SWI, "%d,$", I_rndm);
 		TYPE (rr, ROR);
 		TYPE (rri, ROR);
 		TYPE (rrim, ROR);
@@ -259,7 +259,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE_E (sli, SHL, "%d,%s,<<,%s=", imm, rB, rA);
 		TYPE (slim, SHL);
 		TYPE (slm, SHL);
-		TYPE (smp, SWI);
+		TYPE_E (smp, SWI, "%d,$", I_smp);
 		TYPE_E (sr, SHR, "%s,%s,>>,%s=", rC, rB, rA);
 		TYPE_E (sri, SHR, "%d,%s,>>,%s=", imm, rB, rA);
 		TYPE (srim, SHR);
@@ -1102,14 +1102,19 @@ static int esil_clemency_intr (RAnalEsil *esil, int intr) {
 
 static int set_reg_profile(RAnal *anal) {
 	const char *p = \
+		"# r0   return value\n"
 		"=PC    pc\n"
 		"=SP    st\n"
-		"=BP    st\n"
-		//"=RA    ra\n"
-		"=A0	r0\n"
+		"=BP    r28\n"
+		"=A0    r0\n"
 		"=A1    r1\n"
 		"=A2    r2\n"
 		"=A3    r3\n"
+		"=A4    r4\n"
+		"=A5    r5\n"
+		"=A6    r6\n"
+		"=A7    r7\n"
+		"=A8    r8\n"
 		"gpr	r0	.27	0	0\n"
 		"gpr	r1	.27	4	0\n"
 		"gpr	r2	.27	8	0\n"
