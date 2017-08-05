@@ -2,7 +2,9 @@
 *.swp
 *.un~
 *.dylib
+*.sdb
 *.so
 .ycm_extra_conf.py
+.dir-locals.el
 *dSYM
 tags

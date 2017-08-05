@@ -1,1 +1,1 @@
-Placeholder for clemency2 radare2 plugin
+Placeholder for cLEMENCy radare2 plugin

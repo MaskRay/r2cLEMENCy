@@ -1,0 +1,276 @@
+ad=Add
+ad.=Add (uf)
+adc=Add With Carry
+adc.=Add With Carry (uf)
+adci=Add Immediate With Carry
+adci.=Add Immediate With Carry (uf)
+adcim=Add Immediate Multi Reg With Carry
+adcim.=Add Immediate Multi Reg With Carry (uf)
+adcm=Add Multi Reg With Carry
+adcm.=Add Multi Reg With Carry (uf)
+adf=Add Floating Point
+adf.=Add Floating Point (uf)
+adfm=Add Floating Point Multi Reg
+adfm.=Add Floating Point Multi Reg (uf)
+adi=Add Immediate
+adi.=Add Immediate (uf)
+adim=Add Immediate Multi Reg
+adim.=Add Immediate Multi Reg (uf)
+adm=Add Multi Reg
+adm.=Add Multi Reg (uf)
+an=And
+an.=And (uf)
+ani=And Immediate
+ani.=And Immediate (uf)
+anm=And Multi Reg
+anm.=And Multi Reg (uf)
+b=Branch
+bn=Branch if !=
+be=Branch if ==
+bl=Branch if unsigned <
+ble=Branch if unsigned <=
+bg=Branch if unsigned >
+bge=Branch if unsigned >=
+bno=Branch if OF == 0
+bo=Branch if OF == 1
+bns=Branch if SF == 0
+bs=Branch if SF == 1
+bsl=Branch if signed <
+bsle=Branch if signed <=
+bsg=Branch if signed >
+bsge=Branch if signed >=
+bf=Bit Flip
+bfm=Bit Flip Multi Reg
+br=Branch Register
+brn=Branch Register if !=
+bre=Branch Register if ==
+brl=Branch Register if unsigned <
+brle=Branch Register if unsigned <=
+brg=Branch Register if unsigned >
+brge=Branch Register if unsigned >=
+brno=Branch Register if OF == 0
+bro=Branch Register if OF == 1
+brns=Branch Register if SF == 0
+brs=Branch Register if SF == 1
+brsl=Branch Register if signed <
+brsle=Branch Register if signed <=
+brsg=Branch Register if signed >
+brsge=Branch Register if signed >=
+bra=Branch Absolute
+brr=Branch Relative
+c=Call
+cn=Call if !=
+ce=Call if ==
+cl=Call if unsigned <
+cle=Call if unsigned <=
+cg=Call if unsigned >
+cge=Call if unsigned >=
+cno=Call if OF == 0
+co=Call if OF == 1
+cns=Call if SF == 0
+cs=Call if SF == 1
+csl=Call if signed <
+csle=Call if signed <=
+csg=Call if signed >
+csge=Call if signed >=
+caa=Call Absolute
+car=Call Relative
+cm=Compare
+cmf=Compare Floating Point
+cmfm=Compare Floating Point Multi Reg
+cmi=Compare Immediate
+cmim=Compare Immediate Multi Reg
+cmm=Compare Multi Reg
+cr=Call Register
+crn=Call Register if !=
+cre=Call Register if ==
+crl=Call Register if unsigned <
+crle=Call Register if unsigned <=
+crg=Call Register if unsigned >
+crge=Call Register if unsigned >=
+crno=Call Register if OF == 0
+cro=Call Register if OF == 1
+crns=Call Register if SF == 0
+crs=Call Register if SF == 1
+crsl=Call Register if signed <
+crsle=Call Register if signed <=
+crsg=Call Register if signed >
+crsge=Call Register if signed >=
+dbrk=Debug Break
+di=Disable Interrupts
+dmt=Direct Memory Transfer
+dmt.=Direct Memory Transfer (uf)
+dv=Divide
+dv.=Divide (uf)
+dvf=Divide Floating Point
+dvf.=Divide Floating Point (uf)
+dvfm=Divide Floating Point Multi Reg
+dvfm.=Divide Floating Point Multi Reg (uf)
+dvi=Divide Immediate
+dvi.=Divide Immediate (uf)
+dvim=Divide Immediate Multi Reg
+dvim.=Divide Immediate Multi Reg (uf)
+dvis=Divide Immediate Signed
+dvis.=Divide Immediate Signed (uf)
+dvm=Divide Multi Reg
+dvm.=Divide Multi Reg (uf)
+dvs=Divide Signed
+dvs.=Divide Signed (uf)
+dvsm=Divide Signed Multi Reg
+dvsm.=Divide Signed Multi Reg (uf)
+ei=Enable Interrupts
+fti=Float to Integer
+fti.=Float to Integer (uf)
+ftim=Float to Integer Multi Reg
+ftim.=Float to Integer Multi Reg (uf)
+ht=Halt
+ir=Interrupt Return
+itf=Integer to Float
+itf.=Integer to Float (uf)
+itfm=Integer to Float Multi Reg
+itfm.=Integer to Float Multi Reg (uf)
+lds=Load Single
+ldsd=Load Single
+ldsi=Load Single
+ldt=Load Tri
+ldtd=Load Tri
+ldti=Load Tri
+ldw=Load Word
+ldwd=Load Word
+ldwi=Load Word
+md=Modulus
+md.=Modulus (uf)
+mdf=Modulus Floating Point
+mdf.=Modulus Floating Point (uf)
+mdfm=Modulus Floating Point Multi Reg
+mdfm.=Modulus Floating Point Multi Reg (uf)
+mdi=Modulus Immediate
+mdi.=Modulus Immediate (uf)
+mdim=Modulus Immediate Multi Reg
+mdim.=Modulus Immediate Multi Reg (uf)
+mdis=Modulus Immediate Signed
+mdis.=Modulus Immediate Signed (uf)
+mdm=Modulus Multi Reg
+mdm.=Modulus Multi Reg (uf)
+mds=Modulus Signed
+mds.=Modulus Signed (uf)
+mdsm=Modulus Signed Multi Reg
+mdsm.=Modulus Signed Multi Reg (uf)
+mh=Move High
+ml=Move Low
+ms=Move Low Signed
+mu=Multiply
+mu.=Multiply (uf)
+muf=Multiply Floating Point
+muf.=Multiply Floating Point (uf)
+mufm=Multiply Floating Point Multi Reg
+mufm.=Multiply Floating Point Multi Reg (uf)
+mui=Multiply Immediate
+mui.=Multiply Immediate (uf)
+muim=Multiply Immediate Multi Reg
+muim.=Multiply Immediate Multi Reg (uf)
+muis=Multiply Immediate Signed
+muis.=Multiply Immediate Signed (uf)
+mum=Multiply Multi Reg
+mum.=Multiply Multi Reg (uf)
+mus=Multiply Signed
+mus.=Multiply Signed (uf)
+musm=Multiply Signed Multi Reg
+musm.=Multiply Signed Multi Reg (uf)
+ng=Negate
+ngf=Negate Floating Point
+ngfm=Negate Floating Point Multi Reg
+ngm=Negate Multi Reg
+nt=Not
+ntm=Not Multi Reg
+or=Or
+or.=Or (uf)
+ori=Or Immediate
+ori.=Or Immediate (uf)
+orm=Or Multi Reg
+orm.=Or Multi Reg (uf)
+re=Return
+rf=Read Flags
+rl=Rotate Left
+rl.=Rotate Left (uf)
+rli=Rotate Left Immediate
+rli.=Rotate Left Immediate (uf)
+rlim=Rotate Left Immediate Multi Reg
+rlim.=Rotate Left Immediate Multi Reg (uf)
+rlm=Rotate Left Multi Reg
+rlm.=Rotate Left Multi Reg (uf)
+rmp=Read Memory Protection
+rnd=Random
+rnd.=Random (uf)
+rndm=Random Multi Reg
+rndm.=Random Multi Reg (uf)
+rr=Rotate Right
+rr.=Rotate Right (uf)
+rri=Rotate Right Immediate
+rri.=Rotate Right Immediate (uf)
+rrim=Rotate Right Immediate Multi Reg
+rrim.=Rotate Right Immediate Multi Reg (uf)
+rrm=Rotate Right Multi Reg
+rrm.=Rotate Right Multi Reg (uf)
+sa=Shift Arithemetic Right
+sa.=Shift Arithemetic Right (uf)
+sai=Shift Arithemetic Right Immediate
+sai.=Shift Arithemetic Right Immediate (uf)
+sam=Shift Arithemetic Right Multi Reg
+sam.=Shift Arithemetic Right Multi Reg (uf)
+sb=Subtract
+sb.=Subtract (uf)
+sbc=Subtract With Carry
+sbc.=Subtract With Carry (uf)
+sbci=Subtract Immediate With Carry
+sbci.=Subtract Immediate With Carry (uf)
+sbcm=Subtract Multi Reg With Carry
+sbcm.=Subtract Multi Reg With Carry (uf)
+sbf=Subtract Floating Point
+sbf.=Subtract Floating Point (uf)
+sbfm=Subtract Floating Point Multi Reg
+sbfm.=Subtract Floating Point Multi Reg (uf)
+sbi=Subtract Immediate
+sbi.=Subtract Immediate (uf)
+sbim=Subtract Immediate Multi Reg
+sbim.=Subtract Immediate Multi Reg (uf)
+sbm=Subtract Multi Reg
+sbm.=Subtract Multi Reg (uf)
+ses=Sign Extend Single
+sew=Sign Extend Word
+sf=Set Flags
+sl=Shift Left
+sl.=Shift Left (uf)
+sli=Shift Left Immediate
+sli.=Shift Left Immediate (uf)
+slim=Shift Left Immediate Multi Reg
+slim.=Shift Left Immediate Multi Reg (uf)
+slm=Shift Left Multi Reg
+slm.=Shift Left Multi Reg (uf)
+smp=Set Memory Protection
+sr=Shift Right
+sr.=Shift Right (uf)
+sri=Shift Right Immediate
+sri.=Shift Right Immediate (uf)
+srim=Shift Right Immediate Multi Reg
+srim.=Shift Right Immediate Multi Reg (uf)
+srm=Shift Right Multi Reg
+srm.=Shift Right Multi Reg (uf)
+sts=Store Single
+stsd=Store Single
+stsi=Store Single
+stt=Store Tri
+sttd=Store Tri
+stti=Store Tri
+stw=Store Word
+stwd=Store Word
+stwi=Store Word
+wt=Wait
+xr=Xor
+xr.=Xor (uf)
+xri=Xor Immediate
+xri.=Xor Immediate (uf)
+xrm=Xor Multi Reg
+xrm.=Xor Multi Reg (uf)
+zes=Zero Extend Single
+zew=Zero Extend Word
