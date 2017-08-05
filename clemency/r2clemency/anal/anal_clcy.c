@@ -9,6 +9,26 @@
 
 #include "../include/clemency.h"
 
+#define CC_SWITCH(...) \
+	switch (inst.cc) { \
+	case CC_n: r_strbuf_setf (&op->esil, "zf,!" __VA_ARGS__); break; \
+	case CC_e: r_strbuf_setf (&op->esil, "zf" __VA_ARGS__); break; \
+	case CC_l: r_strbuf_setf (&op->esil, "zf" __VA_ARGS__); break; \
+	case CC_le: r_strbuf_setf (&op->esil, "zf,cf,|" __VA_ARGS__); break; \
+	case CC_g: r_strbuf_setf (&op->esil, "zf,cf,|,!" __VA_ARGS__); break; \
+	case CC_ge: /* I think zf is redundant */ r_strbuf_setf (&op->esil, "zf,cf,!,|" __VA_ARGS__); break; \
+	case CC_no: r_strbuf_setf (&op->esil, "of,!" __VA_ARGS__); break; \
+	case CC_o: r_strbuf_setf (&op->esil, "of" __VA_ARGS__); break; \
+	case CC_ns: r_strbuf_setf (&op->esil, "sf,!" __VA_ARGS__); break; \
+	case CC_s: r_strbuf_setf (&op->esil, "sf" __VA_ARGS__); break; \
+	case CC_sl: r_strbuf_setf (&op->esil, "of,sf,==,!" __VA_ARGS__); break; \
+	case CC_sle: r_strbuf_setf (&op->esil, "zf,of,sf,==,!,|" __VA_ARGS__); break; \
+	case CC_sg: r_strbuf_setf (&op->esil, "zf,!,of,sf,==,&" __VA_ARGS__); break; \
+	case CC_sge: r_strbuf_setf (&op->esil, "of,sf,==" __VA_ARGS__); break; \
+	case CC_invalid: op->type = R_ANAL_OP_TYPE_ILL; break; \
+	case CC_always: r_strbuf_setf (&op->esil, "1" __VA_ARGS__); break; \
+	}
+
 static int reg_read(RAnalEsil *esil, const char *regname, ut64 *num) {
 	RRegItem *reg = r_reg_get (esil->anal->reg, regname, -1);
 	if (reg) {
@@ -28,14 +48,6 @@ static int reg_write(RAnalEsil *esil, const char *regname, ut64 num) {
 	}
 	return 0;
 
-}
-
-char *get_reg_name(int reg_index)
-{
-	if (reg_index < sizeof(regs)) {
-		return regs[reg_index];
-	}
-	return NULL;
 }
 
 static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len) {
@@ -77,12 +89,14 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 			op->type = R_ANAL_OP_TYPE_JMP | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
 			op->jump = addr + inst.imm;
 			op->fail = addr + op->size;
+			CC_SWITCH (",?{,%d,pc,+=,}", inst.imm);
 			break;
 		case I_br:
 			op->type = R_ANAL_OP_TYPE_RCALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
 			op->jump = -1;
 			op->fail = addr + op->size;
 			op->reg = regs[inst.rA];
+			CC_SWITCH (",?{,%s,pc,=,}", op->reg);
 			break;
 		case I_bra:
 			op->type = R_ANAL_OP_TYPE_JMP;
@@ -100,6 +114,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 			op->type = R_ANAL_OP_TYPE_CALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
 			op->jump = addr + inst.imm;
 			op->fail = addr + op->size;
+			CC_SWITCH (",?{,3,pc,+,ra,=,%d,pc,+=,}", imm);
 			break;
 		case I_caa:
 			op->type = R_ANAL_OP_TYPE_CALL;
@@ -118,6 +133,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 			op->jump = -1;
 			op->fail = addr + op->size;
 			op->reg = regs[inst.rA];
+			CC_SWITCH (",?{,3,pc,+,ra,=,%s,pc,=,}", op->reg);
 			break;
 		case I_lds:
 			op->type = R_ANAL_OP_TYPE_LOAD;
@@ -233,7 +249,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (sbcm, SUB);
 		TYPE (sbf, SUB);
 		TYPE (sbfm, SUB);
-		TYPE (sbi, SUB);
+		TYPE_E (sbi, SUB, "%d,%s,-,%s,=", imm, rB, rA);
 		TYPE (sbim, SUB);
 		TYPE (sbm, SUB);
 		TYPE (ses, CPL);
@@ -244,15 +260,15 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (slim, SHL);
 		TYPE (slm, SHL);
 		TYPE (smp, SWI);
-		TYPE (sr, SHR);
-		TYPE (sri, SHR);
+		TYPE_E (sr, SHR, "%s,%s,>>,%s=", rC, rB, rA);
+		TYPE_E (sri, SHR, "%d,%s,>>,%s=", imm, rB, rA);
 		TYPE (srim, SHR);
 		TYPE (srm, SHR);
 		TYPE (sts, STORE);
 		TYPE (stt, STORE);
 		TYPE (stw, STORE);
-		TYPE (xr, XOR);
-		TYPE (xri, XOR);
+		TYPE_E (xr, XOR, "%s,%s,^,%s,=", rC, rB, rA);
+		TYPE_E (xri, XOR, "%d,%s,^,%s,=", imm, rB, rA);
 		TYPE (xrm, XOR);
 		TYPE (zes, CPL);
 		TYPE (zew, CPL);
@@ -532,20 +548,6 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 				r_strbuf_setf(&op->esil, "pc,3,+,%s,=,%"PFMT64d",pc,+=,", rA, imm);
 				break;
 		}
-		break;
-	case CLCY_CAA: // Call absolute
-		op->type = R_ANAL_OP_TYPE_CALL;
-		op->size = 4;
-		op->jump = imm;
-		op->fail = addr + op->size;
-		r_strbuf_setf (&op->esil, "pc,4,+,ra,=,%"PFMT64x",pc,=,",imm);
-		break;
-	case CLCY_CAR: // Call relative
-		op->type = R_ANAL_OP_TYPE_CALL;
-		op->size = 4;
-		op->jump = imm;
-		op->fail = addr + op->size;
-		r_strbuf_setf (&op->esil, "pc,4,+,ra,=,%"PFMT64x",pc,+=,",imm);
 		break;
 	// XXX
 	case CLCY_CM: // Compare
@@ -1044,16 +1046,6 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		break;
 	case CLCY_WT: // Wait
 		op->size = 2;
-		break;
-	case CLCY_XR: // Xor
-		op->type = R_ANAL_OP_TYPE_XOR;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%s,^,%s,=,",rC,rB,rA);
-		break;
-	case CLCY_XRI: // Xor immediate
-		op->type = R_ANAL_OP_TYPE_XOR;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%"PFMT64x",^,%s,=,",rB,imm,rA);
 		break;
 	case CLCY_XRM: // Xor multi reg
 		op->type = R_ANAL_OP_TYPE_XOR;

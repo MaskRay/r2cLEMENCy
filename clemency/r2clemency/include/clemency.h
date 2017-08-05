@@ -17,7 +17,24 @@ enum {
   I__count
 };
 
-enum { CC_always = 15 };
+enum {
+	CC_n,
+	CC_e,
+	CC_l,
+	CC_le,
+	CC_g,
+	CC_ge,
+	CC_no,
+	CC_o,
+	CC_ns,
+	CC_s,
+	CC_sl,
+	CC_sle,
+	CC_sg,
+	CC_sge,
+	CC_invalid,
+	CC_always,
+};
 
 static const char *conditions[16] = {
   "n", "e", "l", "le", "g", "ge", "no", "o",
