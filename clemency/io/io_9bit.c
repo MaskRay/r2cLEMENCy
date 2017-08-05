@@ -43,6 +43,10 @@ static ut64 __lseek(RIO *io, RIODesc *fd, ut64 offset, int whence) {
 static RIODesc *__open(RIO *io, const char *filename, int flags, int mode) {
 	if (!check_default (filename)) return NULL;
 	RBuffer *b = r_buf_new_slurp (filename + 7);
+	if (!b) {
+		eprintf ("Can't open %s\n", filename + 7);
+		return NULL;
+	}
 
 	RIOMMapFileObj *mmo = R_NEW (RIOMMapFileObj);
 	mmo->filename = strdup (filename);
