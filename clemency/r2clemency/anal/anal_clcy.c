@@ -76,7 +76,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 	ZERO_FILL (*op);
 
 	const char *rA = regs[inst.rA], *rB = regs[inst.rB], *rC = regs[inst.rC];
-	int imm = 0; // st32 -> int to avoid PRIi32
+	int imm = (int)inst.imm; // st32 -> int to avoid PRIi32
 	op->type = R_ANAL_OP_TYPE_NULL;
 	op->jump = op->fail = -1;
 	op->ptr = op->val = -1;
@@ -172,28 +172,25 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (cmim, CMP);
 		TYPE (cmm, CMP);
 		TYPE_E (dbrk, TRAP, "0,%d,$", R_ANAL_TRAP_BREAKPOINT);
-		TYPE_E (di, SWI, "%d,$", I_di);
+		TYPE_E (di, MOV, "0x1ff0,4,-1,%s,^,<<,&,0x7ffe00f,fl,&,|", rA);
 		TYPE (dmt, MOV);
-		TYPE_E (dv, DIV, "%d,%s,/,%s,=", imm, rB, rA);
+		TYPE_E (dv, DIV, "%s,%s,/,%s,=", rC, rB, rA);
 		TYPE (dvf, DIV);
 		TYPE (dvfm, DIV);
-		TYPE (dvi, DIV);
+		TYPE_E (dvi, DIV, "%d,%s,/,%s,=", imm, rB, rA);
 		TYPE (dvim, DIV);
-		TYPE (dvis, DIV);
+		TYPE_E (dvis, DIV, "%d,%s,/,%s,=", imm, rB, rA); // XXX
 		TYPE (dvism, DIV);
 		TYPE (dvm, DIV);
 		TYPE (dvs, DIV);
 		TYPE (dvsm, DIV);
-		TYPE_E (ei, SWI, "%d,$", I_di);
+		TYPE_E (ei, MOV, "0x1ff0,4,%s,<<,&,0x7ffe00f,fl,&,|", rA);
 		TYPE (fti, MOV);
 		TYPE (ftim, MOV);
 		TYPE_E (ht, TRAP, "0,%d,$", R_ANAL_TRAP_HALT);
 		TYPE (ir, RET);
 		TYPE (itf, MOV);
 		TYPE (itfm, MOV);
-		//TYPE (lds, LOAD);
-		//TYPE (ldt, LOAD);
-		//TYPE (ldw, LOAD);
 		TYPE_E (md, MOD, "%s,%s,%%,%s,=", rC, rB, rA);
 		TYPE (mdf, MOD);
 		TYPE (mdfm, MOD);
@@ -203,18 +200,18 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (mdm, MOD);
 		TYPE_E (mds, MOD, "%s,%s,%%,%s,=", rC, rB, rA);
 		TYPE (mdsm, MOD);
-		TYPE_E (mh, MOV, "%s,0x3ff,&,%d,10,<<,|,%s,=,", rA, imm, rA);
+		TYPE_E (mh, MOV, "0x3ff,%s,&,10,%d,<<,|,%s,=,", rA, imm, rA);
 		TYPE_E (ml, MOV, "%d,%s,=", imm, rA);
 		TYPE_E (ms, MOV, "%d,%s,=", imm, rA);
 		TYPE_E (mu, MUL, "%s,%s,*,%s,=", rC, rB, rA);
 		TYPE (muf, MUL);
 		TYPE (mufm, MUL);
-		TYPE (mui, MUL);
+		TYPE_E (mui, MUL, "%d,%s,*,%s,=", imm, rB, rA);
 		TYPE (muim, MUL);
-		TYPE (muis, MUL);
+		TYPE_E (muis, MUL, "%d,%s,*,%s,=", imm, rB, rA); // XXX
 		TYPE (muism, MUL);
 		TYPE (mum, MUL);
-		TYPE (mus, MUL);
+		TYPE_E (mus, MUL, "%s,%s,*,%s,=", rC, rB, rA); // XXX
 		TYPE (musm, MUL);
 		TYPE_E (ng, SUB, "%s,0,-,%s,=", rB, rA);
 		TYPE (ngf, SUB);
@@ -226,7 +223,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE_E (ori, OR, "%d,%s,|,%s,=", imm, rB, rA);
 		TYPE (orm, OR);
 		TYPE_E (re, RET, "ra,pc,=");
-		TYPE (rf, MOV);
+		TYPE_E (rf, MOV, "fl,%s,=", rA);
 		TYPE (rl, ROL);
 		TYPE (rli, ROL);
 		TYPE (rlim, ROL);
@@ -254,7 +251,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (sbm, SUB);
 		TYPE (ses, CPL);
 		TYPE (sew, CPL);
-		TYPE (sf, MOV);
+		TYPE_E (sf, MOV, "%s,fl,=", rA);
 		TYPE_E (sl, SHL, "%s,%s,<<,%s=", rC, rB, rA);
 		TYPE_E (sli, SHL, "%d,%s,<<,%s=", imm, rB, rA);
 		TYPE (slim, SHL);
