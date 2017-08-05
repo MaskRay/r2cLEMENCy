@@ -9,16 +9,16 @@ R2_CFLAGS+=-fPIC
 R2_LDFLAGS+=-shared
 R2PM_PLUGDIR=$(shell r2 -H RHOMEDIR)/plugins
 
-DEPS+=asm/asm_clemency.$(LIBEXT)
-DEPS+=anal/anal_clemency.$(LIBEXT)
-DEPS+=core/core_clemency.$(LIBEXT)
-DEPS+=io/io_clemency.$(LIBEXT)
+DEPS+=asm/asm_clcy.$(LIBEXT)
+DEPS+=anal/anal_clcy.$(LIBEXT)
+DEPS+=core/core_clcy.$(LIBEXT)
+DEPS+=io/io_clcy.$(LIBEXT)
 DEPS+=io/io_9bit.$(LIBEXT)
 DEPS+=debug/debug_clcy.$(LIBEXT)
 
 all: $(DEPS)
-	#r2 -a clemency -b 27 ../third_party/clemency/hello.bin
-	r2 -a clemency -e asm.addrbytes=2 9bit://../third_party/clemency/hello.bin
+	#r2 -a clcy -b 27 ../third_party/clemency/hello.bin
+	r2 -a clcy -e asm.addrbytes=2 9bit://../third_party/clemency/hello.bin
 
 %.$(LIBEXT): %.c include/*.h
 	$(LINK.c) $(R2_CFLAGS) $(R2_LDFLAGS) $^ $(LDLIBS) -o $@
@@ -40,4 +40,4 @@ symstall: $(DEPS)
 	ln -sfr $(DEPS) $(R2PM_PLUGDIR)/
 
 uninstall:
-	rm -f ${R2PM_PLUGDIR}/*clemency*
+	rm -f ${R2PM_PLUGDIR}/*clcy*

@@ -122,8 +122,8 @@ static int r_cmd_clemency(struct r_core_t *core, const char *input) {
 }
 
 RCorePlugin r_core_plugin_clemency = {
-	.name = "clemency",
-	.desc = "cLEMENCy core plugin",
+	.name = "clcy",
+	.desc = "cLEMENCy core",
 	.license = "LGPL3",
 	.call = (void*)r_cmd_clemency,
 };

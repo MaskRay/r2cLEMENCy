@@ -200,11 +200,11 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (mum, MUL);
 		TYPE (mus, MUL);
 		TYPE (musm, MUL);
-		TYPE (ng, SUB);
+		TYPE_E (ng, SUB, "%s,0,-,%s,=", rB, rA);
 		TYPE (ngf, SUB);
 		TYPE (ngfm, SUB);
 		TYPE (ngm, SUB);
-		TYPE (nt, NOT);
+		TYPE_E (nt, NOT, "%s,!,%s,=", rB, rA);
 		TYPE (ntm, NOT);
 		TYPE_E (or, OR, "%s,%s,|,%s,=", rC, rB, rA);
 		TYPE_E (ori, OR, "%d,%s,|,%s,=", imm, rB, rA);
@@ -222,8 +222,8 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (rri, ROR);
 		TYPE (rrim, ROR);
 		TYPE (rrm, ROR);
-		TYPE (sa, SAR);
-		TYPE (sai, SAR);
+		TYPE_E (sa, ROR, "%s,%s,>>>>,%s,=", rC, rB, rA);
+		TYPE_E (sai, ROR, "%d,%s,>>>>,%s,=", imm, rB, rA);
 		TYPE (saim, SAR);
 		TYPE (sam, SAR);
 		TYPE_E (sb, SUB, "%s,%s,-,%s,=", rC, rB, rA);
@@ -239,8 +239,8 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (ses, CPL);
 		TYPE (sew, CPL);
 		TYPE (sf, MOV);
-		TYPE (sl, SHL);
-		TYPE (sli, SHL);
+		TYPE_E (sl, SHL, "%s,%s,<<,%s=", rC, rB, rA);
+		TYPE_E (sli, SHL, "%d,%s,<<,%s=", imm, rB, rA);
 		TYPE (slim, SHL);
 		TYPE (slm, SHL);
 		TYPE (smp, SWI);
@@ -1168,10 +1168,10 @@ static int esil_clemency_fini (RAnalEsil *esil) {
 }
 
 static RAnalPlugin r_anal_plugin_clemency = {
-	.name = "clemency",
-	.desc = "cLEMENCy code analysis plugin",
+	.name = "clcy",
+	.desc = "cLEMENCy analysis",
 	.license = "LGPL3",
-	.arch = "clemency",
+	.arch = "clcy",
 	.bits = 27,
 	.esil_init = esil_clemency_init,
 	.esil_fini = esil_clemency_fini,
