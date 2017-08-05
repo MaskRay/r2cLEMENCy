@@ -11,7 +11,6 @@ R2PM_PLUGDIR=$(shell r2 -H RHOMEDIR)/plugins
 
 DEPS+=asm/asm_clemency.$(LIBEXT)
 DEPS+=anal/anal_clemency.$(LIBEXT)
-DEPS+=bin/bin_clemency.$(LIBEXT)
 DEPS+=core/core_clemency.$(LIBEXT)
 DEPS+=io/io_clemency.$(LIBEXT)
 DEPS+=io/io_9bit.$(LIBEXT)

@@ -10,97 +10,106 @@
 
 #include "../include/clemency.h"
 
-#undef R_API
-#define R_API static
-#undef R_IPI
-#define R_IPI static
-
 static void clemency_help(RCore *core) {
 	eprintf ("Clemency command:\n");
-	eprintf ("_s addr   seek to nth 9bit byte\n");
 	eprintf ("_x        9bit hexdump\n");
 	eprintf ("_xw       18bit hexdump\n");
 	eprintf ("_xt       27bit hexdump\n");
 }
 
-static void hexdump_9byte(RCore *core, const char *arg) {
-	int i, offset = 0; // bit level offset
-	for (i = 0; i < core->blocksize - 1; i++) {
-		ut9 byte9 = r_read_me9 (core->block, (i * 8) + offset);
-		if (i % 12 == 0) {
-			r_cons_printf ("\n0x%08"PFMT64x":", core->offset + i);
+static void hexdump_9byte(RCore *core, const char *arg, int len) {
+	// TODO > blocksize
+	ut16 *buf = malloc (len);
+	r_io_read_at (core->io, core->offset, buf, len);
+	for (int i = 0; (i + 1) * 2 <= len; i++) {
+		if (i % 16 == 0) {
+			if (i) r_cons_newline ();
+			r_cons_printf ("0x%08"PFMT64x":", core->offset + i);
 		}
-		r_cons_printf (" %03x", byte9);
-		offset = (offset + 1) % 8;
+		r_cons_printf (" %03x", buf[i]);
 	}
+	r_cons_newline ();
+	free (buf);
 }
 
-static void hexdump_18word(RCore *core, const char *arg) {
-	int i, offset = 0; // bit level offset
-	for (i = 0; i < core->blocksize - 1 ; i++) {
-		ut18 word18 = r_read_me18 (core->block, (i * 8) + offset);
-		if (i % 6 == 0) {
-			r_cons_printf ("\n0x%08"PFMT64x":", core->offset + i);
+static void hexdump_18word(RCore *core, const char *arg, int len) {
+	// TODO > blocksize
+	ut16 *buf = malloc (len);
+	r_io_read_at (core->io, core->offset, buf, len);
+	for (int i = 0; (i + 1) * 4 <= len; i++) {
+		if (i % 8 == 0) {
+			if (i) r_cons_newline ();
+			r_cons_printf ("0x%08"PFMT64x":", core->offset + i * 2);
 		}
-		r_cons_printf (" %05"PFMT32x"", word18);
-		offset = (offset + 1) % 8;
+		r_cons_printf (" %05x", buf[i*2] << 9 | buf[i*2+1]);
 	}
+	r_cons_newline ();
+	free (buf);
 }
 
-static void hexdump_27tri(RCore *core, const char *arg) {
-	int i, offset = 0; // bit level offset
-	for (i = 0; i < core->blocksize - 2 ; i++) {
-		ut27 word27 = r_read_me27 (core->block, (i * 8) + offset);
-		if (i % 4 == 0) {
-			r_cons_printf ("\n0x%08"PFMT64x":", core->offset + i);
+static void hexdump_27tri(RCore *core, const char *arg, int len) {
+	// TODO > blocksize
+	ut16 *buf = malloc (len);
+	r_io_read_at (core->io, core->offset, buf, len);
+	for (int i = 0; (i + 1) * 6 <= len; i++) {
+		if (i % 8 == 0) {
+			if (i) r_cons_newline ();
+			r_cons_printf ("0x%08"PFMT64x":", core->offset + i * 3);
 		}
-		r_cons_printf (" %07"PFMT32x"", word27);
-		offset = (offset + 1) % 8;
+		r_cons_printf (" %07x", buf[i*2+2] << 18 | buf[i*2] << 9 | buf[i*2+1]);
 	}
+	r_cons_newline ();
+	free (buf);
 }
 
-static int r_cmd_clemency(struct r_core_t *core, const char *str) {
-	if (*str == '_') {
-		switch (str[1]) {
-		case 's':
-			{
-				ut64 addr = r_num_math (core->num, str + 2);
-				if (addr % 9) {
-					eprintf ("Unaligned seek for %d bits\n", addr % 9);
-				}
-				r_core_cmdf (core, "s 0x%08"PFMT64x, addr * 9 / 8);
-			}
-			break;
-		case 'x':
-			switch (str[2]) {
-			case 'w':
-				hexdump_18word (core, str);
+static int r_cmd_clemency(struct r_core_t *core, const char *input) {
+	if (input[0] == '_') {
+		switch (input[1]) {
+		case 'x': // "_x"
+			switch (input[2]) {
+			case '\0':
+			case ' ':
+				r_core_cmdf (core, "_p %s", input[2] ? input + 3 : "");
 				break;
 			case 't':
-				hexdump_27tri (core, str);
+				r_core_cmdf (core, "_pt %s", input[2] ? input + 3 : "");
 				break;
-			case 'b':
-			case 'x':
+			case 'w':
+				r_core_cmdf (core, "_pw %s", input[2] ? input + 3 : "");
+				break;
 			default:
-				hexdump_9byte (core, str);
-			}
-			break;
-		case 'p':
-			switch (str[2]) {
-			case 'w':
-				hexdump_18word (core, str);
-				break;
-			case 't':
-				hexdump_27tri (core, str);
-				break;
-			case 'b':
-			case 'x':
-			defaut:
-				hexdump_9byte (core, str);
+				clemency_help (core);
 				break;
 			}
 			break;
-		case 'w':
+		case 'p': // "_p"
+			switch (input[2]) {
+			case '\0':
+			case ' ':
+			case 'x': {
+				int l = input[3] == ' ' ? (int) r_num_math (core->num, input + 4) * 2
+					: core->blocksize;
+				hexdump_9byte (core, input, l);
+				break;
+			}
+			case 't': {
+				int l = input[3] == ' ' ? (int) r_num_math (core->num, input + 4) * 6
+					: core->blocksize;
+				hexdump_27tri (core, input, l);
+				break;
+			}
+			case 'w': {
+				int l = input[3] == ' ' ? (int) r_num_math (core->num, input + 4) * 4
+					: core->blocksize;
+				hexdump_18word (core, input, l);
+				break;
+			}
+			default:
+				clemency_help (core);
+				break;
+			}
+			break;
+		case 'w': // "_w"
 			eprintf ("Bit level writes using 9 bit bytes because FUCK YOU\n");
 			break;
 		default:
@@ -115,14 +124,12 @@ static int r_cmd_clemency(struct r_core_t *core, const char *str) {
 RCorePlugin r_core_plugin_clemency = {
 	.name = "clemency",
 	.desc = "cLEMENCy core plugin",
-	.license = "MIT",
+	.license = "LGPL3",
 	.call = (void*)r_cmd_clemency,
 };
 
-#ifndef CORELIB
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_CORE,
 	.data = &r_core_plugin_clemency,
 	.version = R2_VERSION
 };
-#endif
