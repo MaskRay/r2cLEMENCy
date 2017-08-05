@@ -230,5 +230,6 @@ static RAsmPlugin r_asm_plugin_clemency  = {
 
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_ASM,
-	.data = &r_asm_plugin_clemency
+	.data = &r_asm_plugin_clemency,
+	.version = R2_VERSION,
 };

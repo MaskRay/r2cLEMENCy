@@ -18,7 +18,6 @@ DEPS+=io/io_9bit.$(LIBEXT)
 DEPS+=debug/debug_clcy.$(LIBEXT)
 
 all: $(DEPS)
-	$(MAKE) install
 	#r2 -a clcy -b 27 9bit://../third_party/clemency/hello.bin
 	r2 -a clcy -b 27 ../third_party/clemency/hello.bin
 
@@ -55,6 +54,9 @@ clean:
 install:
 	cp -f */*.$(LIBEXT) $(R2PM_PLUGDIR)
 #	cp -rf */*.$(LIBEXT).dSYM $(R2PM_PLUGDIR)
+
+symstall:
+	ln -sfr */*.$(LIBEXT) $(R2PM_PLUGDIR)/
 
 uninstall:
 	rm -f ${R2PM_PLUGDIR}/*clemency*

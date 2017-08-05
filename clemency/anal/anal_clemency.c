@@ -45,9 +45,223 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 	char *rA, *rB, *rC;
 	st32 imm = 0;
 	ut8 opcode = 0;
-	decode_result_t inst;
 	int cond = 0;
+	inst_t inst = {.pc = addr};
 
+#define FORMAT(fmt) decode_##fmt (&inst, (const ut16*)src);
+#define INS(x,opc) if (inst.opcode == opc) { inst.id = I_##x; break; }
+#define INS_1(x,opc,f1,v1) if (inst.opcode == opc && inst.f1 == v1) { inst.id = I_##x; break; }
+#define INS_2(x,opc,f1,v1,f2,v2) if (inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2) { inst.id = I_##x; break; }
+#define INS_3(x,opc,f1,v1,f2,v2,f3,v3) if (inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2 && inst.f3 == v3) { inst.id = I_##x; break; }
+#define INS_4(x,opc,f1,v1,f2,v2,f3,v3,f4,v4) if (inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2 && inst.f3 == v3 && inst.f4 == v4) { inst.id = I_##x; break; }
+	bool ok = true;
+	do {
+#include "../include/opcode-inc.h"
+#undef FORMAT
+#undef INS
+#undef INS_1
+#undef INS_2
+#undef INS_3
+#undef INS_4
+		ok = false;
+	} while (0);
+
+#define TYPE(inst_, type_) case I_##inst_: op->type = R_ANAL_OP_TYPE_##type_; break
+#define TYPE_E(inst_, type_, ...) case I_##inst_: op->type = R_ANAL_OP_TYPE_##type_; r_strbuf_setf (&op->esil, __VA_ARGS__); break
+	ZERO_FILL (*op);
+
+	if (ok) {
+		op->size = inst.size;
+		switch (inst.id) {
+		case I_b:
+			op->type = R_ANAL_OP_TYPE_JMP | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
+			op->jump = addr + inst.imm;
+			op->fail = addr + op->size;
+			break;
+		case I_br:
+			op->type = R_ANAL_OP_TYPE_RCALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
+			op->jump = -1;
+			op->fail = addr + op->size;
+			op->reg = regs[inst.rA];
+			break;
+		case I_bra:
+			op->type = R_ANAL_OP_TYPE_JMP;
+			op->jump = inst.imm;
+			op->fail = addr + op->size;
+			r_strbuf_setf (&op->esil, "%d,pc,=", imm);
+			break;
+		case I_brr:
+			op->type = R_ANAL_OP_TYPE_JMP;
+			op->jump = addr + inst.imm;
+			op->fail = addr + op->size;
+			r_strbuf_setf (&op->esil, "%d,pc,+=", imm);
+			break;
+		case I_c:
+			op->type = R_ANAL_OP_TYPE_CALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
+			op->jump = addr + inst.imm;
+			op->fail = addr + op->size;
+			break;
+		case I_caa:
+			op->type = R_ANAL_OP_TYPE_CALL;
+			op->jump = inst.imm;
+			op->fail = addr + op->size;
+			r_strbuf_setf (&op->esil, "4,pc,+,ra,=,%d,pc,=", imm);
+			break;
+		case I_car:
+			op->type = R_ANAL_OP_TYPE_CALL;
+			op->jump = addr + inst.imm;
+			op->fail = addr + op->size;
+			r_strbuf_setf (&op->esil, "4,pc,+,ra,=,%d,pc,+=", imm);
+			break;
+		case I_cr:
+			op->type = R_ANAL_OP_TYPE_RCALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
+			op->jump = -1;
+			op->fail = addr + op->size;
+			op->reg = regs[inst.rA];
+			break;
+		case I_lds:
+			op->type = R_ANAL_OP_TYPE_LOAD;
+			op->refptr = 1;
+			r_strbuf_setf (&op->esil, "%s,%d,+,[2],&,0x1ff,%s,=", rB, imm, rA);
+			break;
+		case I_ldt:
+			op->type = R_ANAL_OP_TYPE_LOAD;
+			op->refptr = 3;
+			r_strbuf_setf (&op->esil, "%s,%d,+,[4],&,0x7ffffff,%s,=", rB, imm, rA);
+			break;
+		case I_ldw:
+			op->type = R_ANAL_OP_TYPE_LOAD;
+			op->refptr = 2;
+			r_strbuf_setf (&op->esil, "%s,%d,+,[4],&,0x3ffff,%s,=", rB, imm, rA);
+			break;
+			TYPE_E (ad, ADD, "%s,%s,+,%s,=", rC, rB, rA);
+			TYPE_E (adc, ADD, "cf,%s,%s,+,+,%s,=", rC, rB, rA);
+			TYPE_E (adci, ADD, "cf,%d,%s,+,+,%s,=", imm, rB, rA);
+			TYPE (adcim, ADD);
+			TYPE (adcm, ADD);
+			TYPE (adf, ADD);
+			TYPE (adfm, ADD);
+			TYPE_E (adi, ADD, "%d,%s,+,%s,=", imm, rB, rA);
+			TYPE (adim, ADD);
+			TYPE (adm, ADD);
+			TYPE_E (an, AND, "%s,%s,&,%s,=", rC, rB, rA);
+			TYPE_E (ani, AND, "%d,%s,&,%s,=", imm, rB, rA);
+			TYPE (anm, AND);
+			TYPE_E (bf, NOT, "%s,%s,!=", rB, rA);
+			TYPE (bfm, NOT);
+			TYPE_E (cm, CMP, "%s,%s,==", rB, rA); // XXX
+			TYPE (cmf, CMP);
+			TYPE (cmfm, CMP);
+			TYPE_E (cmi, CMP, "%d,%s,==", imm, rA); // XXX
+			TYPE (cmim, CMP);
+			TYPE (cmm, CMP);
+			TYPE (dbrk, TRAP);
+			TYPE (di, SWI);
+			TYPE (dmt, MOV);
+			TYPE (dv, DIV);
+			TYPE (dvf, DIV);
+			TYPE (dvfm, DIV);
+			TYPE (dvi, DIV);
+			TYPE (dvim, DIV);
+			TYPE (dvis, DIV);
+			TYPE (dvism, DIV);
+			TYPE (dvm, DIV);
+			TYPE (dvs, DIV);
+			TYPE (dvsm, DIV);
+			TYPE (ei, SWI);
+			TYPE (fti, MOV);
+			TYPE (ftim, MOV);
+			TYPE (ht, TRAP);
+			TYPE (ir, RET);
+			TYPE (itf, MOV);
+			TYPE (itfm, MOV);
+			//TYPE (lds, LOAD);
+			//TYPE (ldt, LOAD);
+			//TYPE (ldw, LOAD);
+			TYPE_E (md, MOD, "%s,%s,%%,%s,=", rC, rB, rA);
+			TYPE (mdf, MOD);
+			TYPE (mdfm, MOD);
+			TYPE_E (mdi, MOD, "%d,%s,%%,%s,=", imm, rB, rA);
+			TYPE (mdim, MOD);
+			TYPE_E (mdis, MOD, "%d,%s,%%,%s,=", imm, rB, rA);
+			TYPE (mdm, MOD);
+			TYPE_E (mds, MOD, "%s,%s,%%,%s,=", rC, rB, rA);
+			TYPE (mdsm, MOD);
+			TYPE_E (mh, MOV, "%s,0x3ff,&,%d,10,<<,|,%s,=,", rA, imm, rA);
+			TYPE_E (ml, MOV, "%d,%s,=", imm, rA);
+			TYPE_E (ms, MOV, "%d,%s,=", imm, rA);
+			TYPE_E (mu, MUL, "%s,%s,*,%s,=", rC, rB, rA);
+			TYPE (muf, MUL);
+			TYPE (mufm, MUL);
+			TYPE (mui, MUL);
+			TYPE (muim, MUL);
+			TYPE (muis, MUL);
+			TYPE (muism, MUL);
+			TYPE (mum, MUL);
+			TYPE (mus, MUL);
+			TYPE (musm, MUL);
+			TYPE (ng, SUB);
+			TYPE (ngf, SUB);
+			TYPE (ngfm, SUB);
+			TYPE (ngm, SUB);
+			TYPE (nt, NOT);
+			TYPE (ntm, NOT);
+			TYPE_E (or, OR, "%s,%s,|,%s,=", rC, rB, rA);
+			TYPE_E (ori, OR, "%d,%s,|,%s,=", imm, rB, rA);
+			TYPE (orm, OR);
+			TYPE_E (re, RET, "ra,pc,=");
+			TYPE (rf, MOV);
+			TYPE (rl, ROL);
+			TYPE (rli, ROL);
+			TYPE (rlim, ROL);
+			TYPE (rlm, ROL);
+			TYPE (rmp, SWI);
+			TYPE (rnd, SWI);
+			TYPE (rndm, SWI);
+			TYPE (rr, ROR);
+			TYPE (rri, ROR);
+			TYPE (rrim, ROR);
+			TYPE (rrm, ROR);
+			TYPE (sa, SAR);
+			TYPE (sai, SAR);
+			TYPE (saim, SAR);
+			TYPE (sam, SAR);
+			TYPE_E (sb, SUB, "%s,%s,-,%s,=", rC, rB, rA);
+			TYPE_E (sbc, SUB, "cf,%s,%s,-,-,%s,=", rC, rB, rA);
+			TYPE_E (sbci, SUB, "cf,%d,%s,-,-,%s,=", imm, rB, rA);
+			TYPE (sbcim, SUB);
+			TYPE (sbcm, SUB);
+			TYPE (sbf, SUB);
+			TYPE (sbfm, SUB);
+			TYPE (sbi, SUB);
+			TYPE (sbim, SUB);
+			TYPE (sbm, SUB);
+			TYPE (ses, CPL);
+			TYPE (sew, CPL);
+			TYPE (sf, MOV);
+			TYPE (sl, SHL);
+			TYPE (sli, SHL);
+			TYPE (slim, SHL);
+			TYPE (slm, SHL);
+			TYPE (smp, SWI);
+			TYPE (sr, SHR);
+			TYPE (sri, SHR);
+			TYPE (srim, SHR);
+			TYPE (srm, SHR);
+			TYPE (sts, STORE);
+			TYPE (stt, STORE);
+			TYPE (stw, STORE);
+			TYPE (xr, XOR);
+			TYPE (xri, XOR);
+			TYPE (xrm, XOR);
+			TYPE (zes, CPL);
+			TYPE (zew, CPL);
+		}
+	} else {
+		op->size = 1;
+	}
+
+	/*
 	if (op == NULL) {
 		return 1;
 	}
@@ -865,6 +1079,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 	}
 	anal->bitshift = 0; //(op->size * 9 + anal->bitshift) % 8;
 	free (buf);
+	*/
 	return op->size;
 }
 
@@ -975,5 +1190,5 @@ static RAnalPlugin r_anal_plugin_clemency = {
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_ANAL,
 	.data = &r_anal_plugin_clemency,
-	.version = R2_VERSION
+	.version = R2_VERSION,
 };
