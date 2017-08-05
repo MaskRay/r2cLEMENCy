@@ -20,28 +20,149 @@ static const char *mnemonics[] = {
 #undef INS_4
 };
 
-static void pprint_R(RAsmOp *op, const inst_t *inst)
-{
+static int parse_comma(inst_t *inst, const char **src) {
+	while (isspace (**src)) ++*src;
+	if (*(*src)++ != ',') return -1;
+	while (isspace (**src)) ++*src;
+	return 0;
+}
+
+static int parse_imm(inst_t *inst, const char **src) {
+
+}
+
+static int parse_reg(inst_t *inst, const char **src) {
+	static const char *specials[] = {"st", "ra", "pc"};
+	char *s = (char *)*src;
+	for (int i = 0; i < 3; i++)
+		if (!strncasecmp (s, specials[i], 2) && !isalnum(s[2])) {
+			*src += 2;
+			return 29 + i;
+		}
+	if (islower (*src) == 'r') {
+		int r = strtol (s+1, &s, 10);
+		*src = s;
+		return r;
+	}
+	return -1;
+}
+
+static int parse_rA(inst_t *inst, const char **src) {
+	inst->rA = parse_reg (inst, src);
+	return 0 <= inst->rA < 32 ? 0 : -1;
+}
+
+static int parse_rB(inst_t *inst, const char **src) {
+	inst->rB = parse_reg (inst, src);
+	return 0 <= inst->rB < 32 ? 0 : -1;
+}
+
+static int parse_rC(inst_t *inst, const char **src) {
+	inst->rC = parse_reg (inst, src);
+	return 0 <= inst->rC < 32 ? 0 : -1;
+}
+
+static int assemble_R(inst_t *inst, const char **src) {
+	if (parse_uf (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_rB (inst, src)) return 2;
+	if (parse_comma (inst, src)) return -2;
+	if (parse_rC (inst, src)) return 3;
+	return 0;
+}
+
+static int assemble_R_imm(inst_t *inst, const char **src) {
+	if (parse_uf (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_rB (inst, src)) return 2;
+	if (parse_comma (inst, src)) return -2;
+	if (parse_imm (inst, src)) return 3;
+	return 0;
+}
+
+static int assemble_U(inst_t *inst, const char **src) {
+	if (parse_uf (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_rB (inst, src)) return 2;
+	return 0;
+}
+
+static int assemble_BIN_R(inst_t *inst, const char **src) {
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_rB (inst, src)) return 2;
+	return 0;
+}
+
+static int assemble_BIN_R_IMM(inst_t *inst, const char **src) {
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_imm (inst, src)) return 2;
+	return 0;
+}
+
+static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
+	if (parse_cc (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_imm (inst, src)) return 1;
+	return 0;
+}
+
+static int assemble_B_CC_R(inst_t *inst, const char **src) {
+	if (parse_cc (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	return 0;
+}
+
+static int assemble_B_OFF(inst_t *inst, const char **src) {
+	if (parse_cc (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	return 0;
+}
+
+static int assemble_B_LOC(inst_t *inst, const char **src) {
+	if (parse_cc (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	return 0;
+}
+
+static int assemble_N(inst_t *inst, const char **src) {
+	return 0;
+}
+
+static int assemble_FLAGS_INTS(inst_t *inst, const char **src) {
+	if (parse_rA (inst, src)) return 1;
+	return 0;
+}
+
+static void pprint_R(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, %s, %s", mnemonics[inst->id], inst->uf ? "." : "", regs[inst->rA], regs[inst->rB], regs[inst->rC]);
 }
 
-static void pprint_R_IMM(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_R_IMM(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, 0x%" PRIx32, mnemonics[inst->id], inst->uf ? "." : "", regs[inst->rA], inst->imm);
 }
 
-static void pprint_U(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_U(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, %s", mnemonics[inst->id], inst->uf ? "." : "", regs[inst->rA], regs[inst->rB]);
 }
 
-static void pprint_BIN_R(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_BIN_R(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s, %s", mnemonics[inst->id], regs[inst->rA], regs[inst->rB]);
 }
 
-static void pprint_BIN_R_IMM(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_BIN_R_IMM(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s, 0x%" PRIx32, mnemonics[inst->id], regs[inst->rA], inst->imm);
 }
 
@@ -49,57 +170,48 @@ static void pprint_BIN_R_IMM(RAsmOp *op, const inst_t *inst)
 
 #define pprint_MOV_LOW_SIGNED pprint_BIN_R_IMM
 
-static void pprint_B_CC_OFF(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_B_CC_OFF(RAsmOp *op, const inst_t *inst) {
 	if (!conditions[inst->cc])
 		strcpy (op->buf_asm, mnemonics[I_invalid]);
 	else
 		snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s 0x%" PRIx32, mnemonics[inst->id], conditions[inst->cc], inst->pc + inst->imm);
 }
 
-static void pprint_B_CC_R(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_B_CC_R(RAsmOp *op, const inst_t *inst) {
 	if (!conditions[inst->cc])
 		strcpy (op->buf_asm, mnemonics[I_invalid]);
 	else
 		snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s", mnemonics[inst->id], conditions[inst->cc], regs[inst->rA]);
 }
 
-static void pprint_B_OFF(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_B_OFF(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s 0x%" PRIx32, mnemonics[inst->id], inst->pc + inst->imm);
 }
 
-static void pprint_B_LOC(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_B_LOC(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s 0x%" PRIx32, mnemonics[inst->id], inst->imm);
 }
 
-static void pprint_N(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_N(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s", mnemonics[inst->id]);
 }
 
-static void pprint_FLAGS_INTS(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_FLAGS_INTS(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s", mnemonics[inst->id], regs[inst->rA]);
 }
 
-static void pprint_U_EXTEND(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_U_EXTEND(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s, %s", mnemonics[inst->id], regs[inst->rA], regs[inst->rB]);
 }
 
-static void pprint_RANDOM(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_RANDOM(RAsmOp *op, const inst_t *inst) {
 	if (!conditions[inst->cc])
 		strcpy (op->buf_asm, mnemonics[I_invalid]);
 	else
 		snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s", mnemonics[inst->id], conditions[inst->cc], regs[inst->rA]);
 }
 
-static void pprint_M(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_M(RAsmOp *op, const inst_t *inst) {
 	static const char *adj[] = {"", "i", "d"};
 	if (inst->adj_rb >= R_ARRAY_SIZE (adj))
 		strcpy (op->buf_asm, mnemonics[I_invalid]);
@@ -111,8 +223,7 @@ static void pprint_M(RAsmOp *op, const inst_t *inst)
 	}
 }
 
-static void pprint_MP(RAsmOp *op, const inst_t *inst)
-{
+static void pprint_MP(RAsmOp *op, const inst_t *inst) {
 	static const char *protections[] = {"", "R", "W", "RE"};
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s, %s, %s", mnemonics[inst->id], regs[inst->rA], regs[inst->rB], protections[inst->mem_flags]);
 }
@@ -122,12 +233,6 @@ static const char *get_reg_name(int reg_index) {
 		return regs[reg_index];
 	}
 	return NULL;
-}
-
-static int assemble(RAsm *a, RAsmOp *op, const char *buf) {
-	op->size = 1;
-	op->buf[0] = 0x90;
-	return op->size;
 }
 
 static void asm_clemency_getreg(const ut8 *buf, int index, char *reg_str, int max_len) {
@@ -194,6 +299,9 @@ static int dump_27bit(const ut8 *buf, int bitoff) {
 	return offset;
 }
 
+static int assemble(RAsm *a, RAsmOp *op, const char *buf) {
+}
+
 static int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {
 	inst_t inst = {.pc = a->pc};
 	void (*pprint)(RAsmOp *op, const inst_t *inst);
@@ -223,7 +331,7 @@ static RAsmPlugin r_asm_plugin_clemency  = {
 	.bits = 27,
 	.desc = "cLEMENCy disassembler and assembler",
 	.disassemble = &disassemble,
-	.assemble = &assemble
+	.assemble = &assemble,
 };
 
 RLibStruct radare_plugin = {
