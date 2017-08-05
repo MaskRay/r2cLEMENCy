@@ -6,8 +6,6 @@
 #include <r_lib.h>
 #include <r_asm.h>
 
-#include "../anal/decode.h"
-
 #include "../include/clemency.h"
 
 static const char *mnemonics[] = {
