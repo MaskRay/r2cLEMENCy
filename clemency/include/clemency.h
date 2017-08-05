@@ -1,9 +1,5 @@
 #include <r_asm.h>
 
-#define MASK_9BIT 0x1ff
-#define MASK_18BIT 0x3ffff
-#define MASK_27BIT 0x7ffffff
-
 typedef ut16 ut9;
 typedef ut32 ut18;
 typedef ut32 ut27;
@@ -12,6 +8,12 @@ enum {
   I_invalid = 0,
 #define INS(X, OPC) I_##X,
 #include "opcode-inc.h"
+#undef FORMAT
+#undef INS
+#undef INS_1
+#undef INS_2
+#undef INS_3
+#undef INS_4
   I__count
 };
 

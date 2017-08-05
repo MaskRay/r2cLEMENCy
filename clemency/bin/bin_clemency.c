@@ -5,7 +5,7 @@
 #include <r_lib.h>
 #include <r_bin.h>
 
-#include "../include/clcy_mem.h"
+#include "../include/clemency.h"
 
 static bool use_9bit = false;
 
@@ -156,9 +156,9 @@ static RList *entries(RBinFile *arch) {
 }
 
 RBinPlugin r_bin_plugin_clcy = {
-	.name = "clcy",
+	.name = "clemency",
 	.desc = "cLEMENCy bin plugin",
-	.license = "LGPL",
+	.license = "LGPL3",
 	.load = &load,
 	.load_bytes = &load_bytes,
 	.destroy = &destroy,

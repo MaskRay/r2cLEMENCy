@@ -237,22 +237,20 @@ static int __system(RIO *io, RIODesc *fd, const char *cmd) {
 }
 
 RIOPlugin r_io_plugin_clcy = {
-	.name = "clcy",
-        .desc = "Clemency debugger shell IO plugin",
-	.license = "MIT",
-        .open = __open,
-        .close = __close,
+	.name = "clemency",
+	.desc = "cLEMENCy debugger shell IO plugin",
+	.license = "LGPL3",
+	.open = __open,
+	.close = __close,
 	.read = __read,
-        .check = __plugin_open,
+	.check = __plugin_open,
 	.lseek = __lseek,
 	.write = __write,
 	.system = __system,
 };
 
-#ifndef CORELIB
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_IO,
 	.data = &r_io_plugin_clcy,
 	.version = R2_VERSION
 };
-#endif

@@ -217,8 +217,8 @@ static int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {
 }
 
 static RAsmPlugin r_asm_plugin_clemency  = {
-	.name = "clcy",
-	.arch = "clcy",
+	.name = "clemency",
+	.arch = "clemency",
 	.license = "LGPL3",
 	.bits = 27,
 	.desc = "clemency disassembler and assembler plugin",

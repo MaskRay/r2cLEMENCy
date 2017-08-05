@@ -18,29 +18,11 @@ DEPS+=io/io_9bit.$(LIBEXT)
 DEPS+=debug/debug_clcy.$(LIBEXT)
 
 all: $(DEPS)
-	#r2 -a clcy -b 27 ../third_party/clemency/hello.bin
-	r2 -a clcy -e asm.addrbytes=2 9bit://../third_party/clemency/hello.bin
+	#r2 -a clemency -b 27 ../third_party/clemency/hello.bin
+	r2 -a clemency -e asm.addrbytes=2 9bit://../third_party/clemency/hello.bin
 
-asm/asm_clemency.$(LIBEXT): asm/asm_clemency.c asm/asm-desc.kv
-	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o asm/asm_clemency.$(LIBEXT) asm/asm_clemency.c
-
-anal/anal_clemency.$(LIBEXT): anal/anal_clemency.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o anal/anal_clemency.$(LIBEXT) anal/anal_clemency.c
-
-bin/bin_clemency.$(LIBEXT): bin/bin_clemency.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o bin/bin_clemency.$(LIBEXT) bin/bin_clemency.c
-
-core/core_clemency.$(LIBEXT): core/core_clemency.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o core/core_clemency.$(LIBEXT) core/core_clemency.c
-
-io/io_clemency.$(LIBEXT): io/io_clemency.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o io/io_clemency.$(LIBEXT) io/io_clemency.c
-
-io/io_9bit.$(LIBEXT): io/io_9bit.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o io/io_9bit.$(LIBEXT) io/io_9bit.c
-
-debug/debug_clcy.$(LIBEXT): debug/debug_clcy.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(R2_CFLAGS) $(R2_LDFLAGS) -o debug/debug_clcy.$(LIBEXT) debug/debug_clcy.c
+%.$(LIBEXT): %.c include/*.h
+	$(LINK.c) $(R2_CFLAGS) $(R2_LDFLAGS) $^ $(LDLIBS) -o $@
 
 asm/specs.json:
 	node asm/pdf2specs.js > asm/specs.json
@@ -49,14 +31,14 @@ asm/asm-desc.kv: asm/specs.json
 	node asm/specs2desc.js > asm/asm-desc.kv
 
 clean:
-	rm -f */*.$(LIBEXT) */*.dll */*.so */*.dylib
+	rm -f $(DEPS)
 
-install:
-	cp -f */*.$(LIBEXT) $(R2PM_PLUGDIR)
+install: $(DEPS)
+	cp -f $(DEPS) $(R2PM_PLUGDIR)/
 #	cp -rf */*.$(LIBEXT).dSYM $(R2PM_PLUGDIR)
 
-symstall:
-	ln -sfr */*.$(LIBEXT) $(R2PM_PLUGDIR)/
+symstall: $(DEPS)
+	ln -sfr $(DEPS) $(R2PM_PLUGDIR)/
 
 uninstall:
 	rm -f ${R2PM_PLUGDIR}/*clemency*

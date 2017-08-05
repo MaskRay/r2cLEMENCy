@@ -410,10 +410,10 @@ static RDebugInfo* r_debug_clcy_info(RDebug *dbg, const char *arg) {
 }
 
 RDebugPlugin r_debug_plugin_clcy = {
-	.name = "clcy",
+	.name = "clemency",
 	/* TODO: Add support for more architectures here */
-	.license = "MIT",
-	.arch = "clcy",
+	.license = "LGPL3",
+	.arch = "clemency",
 	.bits = 27,
 	.step = r_debug_clcy_step,
 	.cont = r_debug_clcy_continue,

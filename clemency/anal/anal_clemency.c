@@ -1,14 +1,11 @@
 /* radare2 - LGPL - Copyright 2017 - xvilka */
 
+#include <stdio.h>
 #include <string.h>
 #include <r_types.h>
 #include <r_lib.h>
 #include <r_asm.h>
 #include <r_anal.h>
-#include <stdio.h>
-#include <fcntl.h>
-
-#include "decode.h"
 
 #include "../include/clemency.h"
 
@@ -161,7 +158,7 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (dbrk, TRAP);
 		TYPE (di, SWI);
 		TYPE (dmt, MOV);
-		TYPE (dv, DIV);
+		TYPE_E (dv, DIV, "%d,%s,/,%s,=", imm, rB, rA);
 		TYPE (dvf, DIV);
 		TYPE (dvfm, DIV);
 		TYPE (dvi, DIV);
@@ -1171,10 +1168,10 @@ static int esil_clemency_fini (RAnalEsil *esil) {
 }
 
 static RAnalPlugin r_anal_plugin_clemency = {
-	.name = "clcy",
-	.desc = "clemency code analysis plugin",
+	.name = "clemency",
+	.desc = "cLEMENCy code analysis plugin",
 	.license = "LGPL3",
-	.arch = "clcy",
+	.arch = "clemency",
 	.bits = 27,
 	.esil_init = esil_clemency_init,
 	.esil_fini = esil_clemency_fini,
