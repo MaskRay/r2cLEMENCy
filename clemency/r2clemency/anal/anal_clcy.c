@@ -8,6 +8,7 @@
 #include <r_anal.h>
 
 #include "../include/clemency.h"
+#include "../include/disasm.h"
 
 #define CC_SWITCH(...) \
 	switch (inst.cc) { \

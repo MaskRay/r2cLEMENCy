@@ -7,6 +7,8 @@
 #include <r_asm.h>
 
 #include "../include/clemency.h"
+#include "../include/disasm.h"
+#include "../include/opfield-inc.h"
 
 static const char *mnemonics[] = {
 	"invalid",
@@ -20,7 +22,17 @@ static const char *mnemonics[] = {
 #undef INS_4
 };
 
+
 static int parse_cc(inst_t *inst, const char **src) {
+	for (int i = 0; i < R_ARRAY_SIZE (conditions); i++)
+		if (conditions[i]) {
+			int l = strlen (conditions[i]);
+			if (!strncasecmp (*src, conditions[i], l) && !isalnum(src[l])) {
+				*src += l;
+				return i;
+			}
+		}
+	return -1;
 }
 
 static int parse_comma(inst_t *inst, const char **src) {
@@ -30,8 +42,16 @@ static int parse_comma(inst_t *inst, const char **src) {
 	return 0;
 }
 
-static int parse_imm(inst_t *inst, const char **src) {
+static int parse_end(const char **src) {
+	return 0;
+}
 
+static int parse_imm(inst_t *inst, const char **src) {
+	char *s = (char *)*src;
+	inst->imm = strtol (s, &s, 0);
+	if (s == *src) return -1;
+	*src = s;
+	return 0;
 }
 
 static int parse_reg(inst_t *inst, const char **src) {
@@ -65,6 +85,14 @@ static int parse_rC(inst_t *inst, const char **src) {
 	return 0 <= inst->rC < 32 ? 0 : -1;
 }
 
+static int parse_rw(inst_t *inst, const char **src) {
+	char *s = (char *)*src;
+	inst->rw = strtol (s, &s, 0);
+	if (s == *src) return -1;
+	*src = s;
+	return 0;
+}
+
 static int parse_space(inst_t *inst, const char **src) {
 	const char *s = *src;
 	while (isspace (*s)) s++;
@@ -83,7 +111,10 @@ static int parse_uf(inst_t *inst, const char **src) {
 	return 0;
 }
 
+#define FIELD(name, offset, count) | ((ut64)inst->name << bit_size-count-offset)
+
 static int assemble_R(inst_t *inst, const char **src) {
+	int bit_size = 27;
 	if (parse_uf (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
@@ -91,10 +122,13 @@ static int assemble_R(inst_t *inst, const char **src) {
 	if (parse_rB (inst, src)) return 2;
 	if (parse_comma (inst, src)) return -2;
 	if (parse_rC (inst, src)) return 3;
+	if (parse_end (src)) return 3;
+	inst->code = 0 FORM_R;
 	return 0;
 }
 
-static int assemble_R_imm(inst_t *inst, const char **src) {
+static int assemble_R_IMM(inst_t *inst, const char **src) {
+	int bit_size = 27;
 	if (parse_uf (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
@@ -102,68 +136,157 @@ static int assemble_R_imm(inst_t *inst, const char **src) {
 	if (parse_rB (inst, src)) return 2;
 	if (parse_comma (inst, src)) return -2;
 	if (parse_imm (inst, src)) return 3;
+	if (parse_end (src)) return 3;
+	inst->code = 0 FORM_R_IMM;
 	return 0;
 }
 
 static int assemble_U(inst_t *inst, const char **src) {
+	int bit_size = 27;
 	if (parse_uf (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return -1;
 	if (parse_rB (inst, src)) return 2;
+	if (parse_end (src)) return 2;
+	inst->code = 0 FORM_U;
 	return 0;
 }
 
 static int assemble_BIN_R(inst_t *inst, const char **src) {
+	int bit_size = 18;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return -1;
 	if (parse_rB (inst, src)) return 2;
+	if (parse_end (src)) return 2;
+	inst->code = 0 FORM_BIN_R;
 	return 0;
 }
 
 static int assemble_BIN_R_IMM(inst_t *inst, const char **src) {
+	int bit_size = 27;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return -1;
 	if (parse_imm (inst, src)) return 2;
+	if (parse_end (src)) return 2;
+	inst->code = 0 FORM_BIN_R_IMM;
 	return 0;
 }
 
+static int assemble_MOV_LOW_HI(inst_t *inst, const char **src) {
+	int bit_size = 27;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_imm (inst, src)) return 2;
+	if (parse_end (src)) return 2;
+	inst->code = 0 FORM_MOV_LOW_HI;
+	return 0;
+}
+
+static int assemble_MOV_LOW_SIGNED(inst_t *inst, const char **src) {
+	return assemble_MOV_LOW_HI (inst, src);
+}
+
 static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
+	int bit_size = 27;
+	if (parse_space (inst, src)) return 1;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
 	if (parse_imm (inst, src)) return 1;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_B_CC_OFF;
 	return 0;
 }
 
 static int assemble_B_CC_R(inst_t *inst, const char **src) {
+	int bit_size = 18;
+	if (parse_space (inst, src)) return 1;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_B_CC_R;
 	return 0;
 }
 
 static int assemble_B_OFF(inst_t *inst, const char **src) {
+	int bit_size = 36;
+	if (parse_space (inst, src)) return 1;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
-	if (parse_rA (inst, src)) return 1;
+	if (parse_imm (inst, src)) return 1;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_B_OFF;
 	return 0;
 }
 
 static int assemble_B_LOC(inst_t *inst, const char **src) {
+	int bit_size = 36;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
-	if (parse_rA (inst, src)) return 1;
+	if (parse_imm (inst, src)) return 1;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_B_LOC;
 	return 0;
 }
 
 static int assemble_N(inst_t *inst, const char **src) {
+	int bit_size = 18;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_N;
 	return 0;
 }
 
 static int assemble_FLAGS_INTS(inst_t *inst, const char **src) {
+	int bit_size = 18;
 	if (parse_rA (inst, src)) return 1;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_FLAGS_INTS;
+	return 0;
+}
+
+static int assemble_U_EXTEND(inst_t *inst, const char **src) {
+	int bit_size = 27;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_U_EXTEND;
+	return 0;
+}
+
+static int assemble_RANDOM(inst_t *inst, const char **src) {
+	int bit_size = 27;
+	if (parse_uf (inst, src)) return 1;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_end (src)) return 1;
+	inst->code = 0 FORM_RANDOM;
+	return 0;
+}
+
+static int assemble_M(inst_t *inst, const char **src) {
+	int bit_size = 54;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return 1;
+	if (parse_rB (inst, src)) return 2;
+	if (parse_end (src)) return 2;
+	inst->code = 0 FORM_M;
+	return 0;
+}
+
+static int assemble_MP(inst_t *inst, const char **src) {
+	int bit_size = 54;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return 1;
+	if (parse_rB (inst, src)) return 2;
+	if (parse_comma (inst, src)) return 1;
+	if (parse_rw (inst, src)) return 3;
+	if (parse_end (src)) return 3;
+	inst->code = 0 FORM_MP;
 	return 0;
 }
 
@@ -254,70 +377,6 @@ static const char *get_reg_name(int reg_index) {
 		return regs[reg_index];
 	}
 	return NULL;
-}
-
-static void asm_clemency_getreg(const ut8 *buf, int index, char *reg_str, int max_len) {
-	int reg;
-	int byte_off;
-	int bit_off;
-	const ut8 *c;
-
-	byte_off = index / 8;
-	bit_off = index % 8;
-	c = &buf[byte_off]; // buf+byte_off;
-	reg = (*c >> bit_off) & 0x1f;
-	if (bit_off > 3) {
-		bit_off = 8 - bit_off;
-		c = c + 1;
-		reg = reg & (*c << bit_off);
-	}
-	switch (reg & 0x1f) {
-		case 29:
-			snprintf(reg_str, max_len, "st");
-			break;
-		case 30:
-			snprintf(reg_str, max_len, "ra");
-			break;
-		case 31:
-			snprintf(reg_str, max_len, "pc");
-			break;
-		default:
-			snprintf(reg_str, max_len, "r%d", buf[0]);
-			break;
-	}
-}
-
-// return new offset
-static int dump_9bit(const ut8 *buf, int bitoff) {
-	ut9 i;
-	int offset = bitoff + 9; // bit level offset
-	static char b[16] = { 0 };
-	ut9 meint = r_read_me9 (buf, bitoff);
-	for (i = 9; i > 0; i--) {
-		if ((meint & (1UL << i)) >> i == 1) {
-			b[i-1] = '1';
-		} else {
-			b[i-1] = '0';
-		}
-	}
-	eprintf ("%08d : %s [%08x]\n", bitoff, b, meint);
-	return offset;
-}
-
-static int dump_27bit(const ut8 *buf, int bitoff) {
-	ut27 i;
-	int offset = bitoff + 27; // bit level offset
-	static char b[32] = { 0 };
-	ut27 meint = r_read_me27 (buf, bitoff);
-	for (i = 27; i > 0; i--) {
-		if ((meint & (1UL << i)) >> i == 1) {
-			b[i-1] = '1';
-		} else {
-			b[i-1] = '0';
-		}
-	}
-	eprintf ("%08d : %s [%08"PFMT32x"]\n", bitoff, b, meint);
-	return offset;
 }
 
 static int assemble(RAsm *a, RAsmOp *op, const char *buf) {

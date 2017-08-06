@@ -21,8 +21,14 @@ all: $(DEPS)
 	#r2 -a clcy -b 27 ../third_party/clemency/hello.bin
 	r2 -a clcy -b 27 -e asm.addrbytes=2 9bit://../third_party/clemency/hello.bin
 
-%.$(LIBEXT): %.c include/*.h
+%.o: %.c include/*.h
+	$(COMPILE.c) $(R2_CFLAGS) $(R2_LDFLAGS) $< -o $@
+
+%.$(LIBEXT): %.o
 	$(LINK.c) $(R2_CFLAGS) $(R2_LDFLAGS) $^ $(LDLIBS) -o $@
+
+anal/anal_clcy.$(LIBEXT): disasm.o
+asm/asm_clcy.$(LIBEXT): disasm.o
 
 %.sdb: %
 	$(SDB) $@ = < $^
