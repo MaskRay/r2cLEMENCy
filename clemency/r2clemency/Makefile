@@ -19,7 +19,7 @@ DEPS := $(SO) asm/d/clcy.sdb syscall/d/linux-clcy-27.sdb
 
 all: $(DEPS)
 	#r2 -a clcy -b 27 ../third_party/clemency/hello.bin
-	r2 -a clcy -b 27 -e asm.addrbytes=2 9bit://../third_party/clemency/hello.bin
+	r2 -a clcy -b 27 -e asm.addrbytes=2 -e io.cache=1 9bit://../third_party/clemency/hello.bin
 
 %.o: %.c include/*.h
 	$(COMPILE.c) $(R2_CFLAGS) $(R2_LDFLAGS) $< -o $@

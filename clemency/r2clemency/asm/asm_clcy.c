@@ -27,7 +27,7 @@ static int parse_cc(inst_t *inst, const char **src) {
 	for (int i = 0; i < R_ARRAY_SIZE (conditions); i++)
 		if (conditions[i]) {
 			int l = strlen (conditions[i]);
-			if (!strncasecmp (*src, conditions[i], l) && !isalnum(src[l])) {
+			if (!strncasecmp (*src, conditions[i], l) && !isalnum((*src)[l])) {
 				*src += l;
 				return i;
 			}
@@ -35,15 +35,20 @@ static int parse_cc(inst_t *inst, const char **src) {
 	return -1;
 }
 
-static int parse_comma(inst_t *inst, const char **src) {
+static int parse_char(inst_t *inst, const char **src, char c) {
 	while (isspace (**src)) ++*src;
-	if (*(*src)++ != ',') return -1;
+	if (*(*src)++ != c) return -1;
 	while (isspace (**src)) ++*src;
 	return 0;
 }
 
+static int parse_comma(inst_t *inst, const char **src) {
+	return parse_char (inst, src, ',');
+}
+
 static int parse_end(const char **src) {
-	return 0;
+	while (isspace (**src)) ++*src;
+	return **src ? -1 : 0;
 }
 
 static int parse_imm(inst_t *inst, const char **src) {
@@ -62,7 +67,7 @@ static int parse_reg(inst_t *inst, const char **src) {
 			*src += 2;
 			return 29 + i;
 		}
-	if (islower (*src) == 'r') {
+	if (tolower (*s) == 'r') {
 		int r = strtol (s+1, &s, 10);
 		*src = s;
 		return r;
@@ -123,6 +128,7 @@ static int assemble_R(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return -2;
 	if (parse_rC (inst, src)) return 3;
 	if (parse_end (src)) return 3;
+	inst->size = 3;
 	inst->code = 0 FORM_R;
 	return 0;
 }
@@ -137,6 +143,7 @@ static int assemble_R_IMM(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return -2;
 	if (parse_imm (inst, src)) return 3;
 	if (parse_end (src)) return 3;
+	inst->size = 3;
 	inst->code = 0 FORM_R_IMM;
 	return 0;
 }
@@ -149,6 +156,7 @@ static int assemble_U(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return -1;
 	if (parse_rB (inst, src)) return 2;
 	if (parse_end (src)) return 2;
+	inst->size = 3;
 	inst->code = 0 FORM_U;
 	return 0;
 }
@@ -160,6 +168,7 @@ static int assemble_BIN_R(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return -1;
 	if (parse_rB (inst, src)) return 2;
 	if (parse_end (src)) return 2;
+	inst->size = 2;
 	inst->code = 0 FORM_BIN_R;
 	return 0;
 }
@@ -171,6 +180,7 @@ static int assemble_BIN_R_IMM(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return -1;
 	if (parse_imm (inst, src)) return 2;
 	if (parse_end (src)) return 2;
+	inst->size = 3;
 	inst->code = 0 FORM_BIN_R_IMM;
 	return 0;
 }
@@ -182,6 +192,7 @@ static int assemble_MOV_LOW_HI(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return -1;
 	if (parse_imm (inst, src)) return 2;
 	if (parse_end (src)) return 2;
+	inst->size = 3;
 	inst->code = 0 FORM_MOV_LOW_HI;
 	return 0;
 }
@@ -197,6 +208,7 @@ static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_imm (inst, src)) return 1;
 	if (parse_end (src)) return 1;
+	inst->size = 3;
 	inst->code = 0 FORM_B_CC_OFF;
 	return 0;
 }
@@ -208,6 +220,7 @@ static int assemble_B_CC_R(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_end (src)) return 1;
+	inst->size = 2;
 	inst->code = 0 FORM_B_CC_R;
 	return 0;
 }
@@ -219,6 +232,7 @@ static int assemble_B_OFF(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_imm (inst, src)) return 1;
 	if (parse_end (src)) return 1;
+	inst->size = 4;
 	inst->code = 0 FORM_B_OFF;
 	return 0;
 }
@@ -229,6 +243,7 @@ static int assemble_B_LOC(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_imm (inst, src)) return 1;
 	if (parse_end (src)) return 1;
+	inst->size = 4;
 	inst->code = 0 FORM_B_LOC;
 	return 0;
 }
@@ -236,6 +251,7 @@ static int assemble_B_LOC(inst_t *inst, const char **src) {
 static int assemble_N(inst_t *inst, const char **src) {
 	int bit_size = 18;
 	if (parse_end (src)) return 1;
+	inst->size = 2;
 	inst->code = 0 FORM_N;
 	return 0;
 }
@@ -244,6 +260,7 @@ static int assemble_FLAGS_INTS(inst_t *inst, const char **src) {
 	int bit_size = 18;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_end (src)) return 1;
+	inst->size = 2;
 	inst->code = 0 FORM_FLAGS_INTS;
 	return 0;
 }
@@ -252,6 +269,7 @@ static int assemble_U_EXTEND(inst_t *inst, const char **src) {
 	int bit_size = 27;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_end (src)) return 1;
+	inst->size = 3;
 	inst->code = 0 FORM_U_EXTEND;
 	return 0;
 }
@@ -262,30 +280,66 @@ static int assemble_RANDOM(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_end (src)) return 1;
+	inst->size = 3;
 	inst->code = 0 FORM_RANDOM;
 	return 0;
 }
 
 static int assemble_M(inst_t *inst, const char **src) {
 	int bit_size = 54;
+	if (**src == 'i') {
+		++*src;
+		inst->adj_rb = 1;
+	} else if (**src == 'd') {
+		++*src;
+		inst->adj_rb = 2;
+	}
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return 1;
 	if (parse_rB (inst, src)) return 2;
+	if (parse_char (inst, src, '[')) return 1;
+	if (parse_imm (inst, src)) return 1;
+	if (parse_comma (inst, src)) return 1;
+	char *s = (char *)*src;
+	inst->reg_count = strtol (s, &s, 0);
+	if (s == *src) return -1;
+	*src = s;
+	if (parse_char (inst, src, ']')) return 1;
 	if (parse_end (src)) return 2;
+	inst->size = 6;
 	inst->code = 0 FORM_M;
 	return 0;
 }
 
 static int assemble_MP(inst_t *inst, const char **src) {
-	int bit_size = 54;
+	int bit_size = 27;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return 1;
 	if (parse_rB (inst, src)) return 2;
 	if (parse_comma (inst, src)) return 1;
-	if (parse_rw (inst, src)) return 3;
+	char *s = (char *)*src;
+	if (tolower (s[0]) == 'r') {
+		if (tolower (s[1]) == 'w') {
+			inst->mem_flags = 2;
+			s += 2;
+		} else if (tolower (s[1]) == 'e') {
+			inst->mem_flags = 3;
+			s += 2;
+		} else {
+			inst->mem_flags = 1;
+			s++;
+		}
+	} else if ('0' <= s[0] && s[0] <= '4') {
+		inst->mem_flags = s[0] - '0';
+		s++;
+	} else {
+		inst->mem_flags = 0;
+	}
+	*src = s;
 	if (parse_end (src)) return 3;
+	inst->size = 3;
 	inst->code = 0 FORM_MP;
 	return 0;
 }
@@ -379,8 +433,73 @@ static const char *get_reg_name(int reg_index) {
 	return NULL;
 }
 
-static int assemble(RAsm *a, RAsmOp *op, const char *buf) {
-	return 0;
+static int assemble(RAsm *a, RAsmOp *op, const char *src) {
+	static const char *bc[] = {"br", "b", "cr", "c"};
+	static const char *adj[] = {"lds", "ldt", "ldw", "sts", "stt", "stw"};
+
+	char buf[4096];
+	int mnemlen = 0;
+	snprintf (buf, sizeof buf, "%s", src);
+	for (int i = 0; i < R_ARRAY_SIZE (bc); i++) {
+		int l = strlen (bc[i]), ll;
+		if (!strncasecmp (buf, bc[i], l)) {
+			for (int j = 0; j < R_ARRAY_SIZE (conditions); j++)
+				if (conditions[j] && (ll = strlen (conditions[j]), !strncasecmp (buf+l, conditions[j], ll))) {
+					mnemlen = l;
+					break;
+				}
+		}
+	}
+	if (!mnemlen) {
+		for (int i = 0; i < R_ARRAY_SIZE (adj); i++) {
+			if (!strncasecmp (buf, bc[i], 3)) {
+				mnemlen = 3;
+				break;
+			}
+		}
+	}
+	if (!mnemlen) {
+		while (buf[mnemlen] && buf[mnemlen] != '.' && !isspace(buf[mnemlen])) {
+			mnemlen++;
+		}
+	}
+
+	int (*assem)(inst_t *inst, const char **src) = NULL;
+	inst_t inst;
+	char saved = buf[mnemlen];
+	buf[mnemlen] = '\0';
+	inst.pc = a->pc;
+
+#define FORMAT(fmt) assem = assemble_##fmt;
+#define INS(x,opc) if (!strcmp (buf, #x)) { buf[mnemlen] = saved; src = buf+mnemlen; inst.opcode = opc; break; }
+#define INS_1(x,opc,f1,v1) inst.f1 = v1; INS(x, opc)
+#define INS_2(x,opc,f1,v1,f2,v2) inst.f1 = v1; inst.f2 = v2; INS(x, opc)
+#define INS_3(x,opc,f1,v1,f2,v2,f3,v3) inst.f1 = v1; inst.f2 = v2; inst.f3 = v3; INS(x, opc)
+#define INS_4(x,opc,f1,v1,f2,v2,f3,v3,f4,v4) inst.f1 = v1; inst.f2 = v2; inst.f3 = v3; inst.f4 = v4; INS(x, opc)
+	do {
+#include "../include/opcode-inc.h"
+#undef FORMAT
+#undef INS
+#undef INS_1
+#undef INS_2
+#undef INS_3
+#undef INS_4
+		return -1;
+	} while (0);
+
+	if (assem (&inst, &src)) return -1;
+	for (int i = 0; i < inst.size; i++) {
+		op->buf[i * 2] = inst.code >> (inst.size-1-i)*9 & 255;
+		op->buf[i * 2 + 1] = (inst.code >> (inst.size-1-i)*9 & 511) >> 8;
+	}
+	for (int i = 0; i + 1 < inst.size; i += 3) {
+		char t0 = op->buf[i * 2], t1 = op->buf[i * 2 + 1];
+		op->buf[i * 2] = op->buf[i * 2 + 2];
+		op->buf[i * 2 + 1] = op->buf[i * 2 + 3];
+		op->buf[i * 2 + 2] = t0;
+		op->buf[i * 2 + 3] = t1;
+	}
+	return inst.size * 2;
 }
 
 static int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {

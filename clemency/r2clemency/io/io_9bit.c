@@ -84,7 +84,8 @@ static int __read(RIO *io, RIODesc *fd, ut8 *buf, int count) {
 }
 
 static int __write(RIO *io, RIODesc *fd, const ut8 *buf, int len) {
-	return -1;
+	RIOMMapFileObj *mmo = fd->data;
+	return r_buf_write_at (mmo->buf, io->off * 2, buf, len);
 }
 
 RIOPlugin r_io_plugin_9bit = {
