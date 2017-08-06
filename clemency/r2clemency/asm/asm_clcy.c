@@ -1,5 +1,6 @@
 /* radare - LGPL - Copyright 2017 - xvilka */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <r_types.h>
@@ -54,16 +55,18 @@ static int parse_end(const char **src) {
 
 static int parse_imm_st(inst_t *inst, const char **src, int bits) {
 	char *s = (char *)*src;
+	errno = 0;
 	inst->imm = strtol (s, &s, 0);
-	if (s == *src || !(-1 << bits-1 <= inst->imm && inst->imm < 1 << bits-1)) return -1;
+	if (errno || !(-1 << bits-1 <= inst->imm && inst->imm < 1 << bits-1)) return -1;
 	*src = s;
 	return 0;
 }
 
 static int parse_imm_ut(inst_t *inst, const char **src, int bits) {
 	char *s = (char *)*src;
+	errno = 0;
 	inst->imm = strtol (s, &s, 0);
-	if (s == *src || !(0 <= inst->imm && inst->imm < 1 << bits)) return -1;
+	if (errno || !(0 <= inst->imm && inst->imm < 1 << bits)) return -1;
 	*src = s;
 	return 0;
 }
@@ -77,7 +80,9 @@ static int parse_reg(inst_t *inst, const char **src) {
 			return 29 + i;
 		}
 	if (tolower (*s) == 'r') {
+		errno = 0;
 		int r = strtol (s+1, &s, 10);
+		if (errno) return -1;
 		*src = s;
 		return r;
 	}
@@ -97,14 +102,6 @@ static int parse_rB(inst_t *inst, const char **src) {
 static int parse_rC(inst_t *inst, const char **src) {
 	inst->rC = parse_reg (inst, src);
 	return 0 <= inst->rC < 32 ? 0 : -1;
-}
-
-static int parse_rw(inst_t *inst, const char **src) {
-	char *s = (char *)*src;
-	inst->rw = strtol (s, &s, 0);
-	if (s == *src) return -1;
-	*src = s;
-	return 0;
 }
 
 static int parse_space(inst_t *inst, const char **src) {
@@ -275,6 +272,7 @@ static int assemble_N(inst_t *inst, const char **src) {
 
 static int assemble_FLAGS_INTS(inst_t *inst, const char **src) {
 	int bit_size = 18;
+	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_end (src)) return 1;
 	inst->size = 2;
@@ -284,8 +282,11 @@ static int assemble_FLAGS_INTS(inst_t *inst, const char **src) {
 
 static int assemble_U_EXTEND(inst_t *inst, const char **src) {
 	int bit_size = 27;
+	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
-	if (parse_end (src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_rB (inst, src)) return 2;
+	if (parse_end (src)) return 2;
 	inst->size = 3;
 	inst->code = 0 FORM_U_EXTEND;
 	return 0;
@@ -322,8 +323,9 @@ static int assemble_M(inst_t *inst, const char **src) {
 	inst->imm &= 0x7ffffff;
 	if (parse_comma (inst, src)) return -3;
 	char *s = (char *)*src;
+	errno = 0;
 	inst->reg_count = strtol (s, &s, 0);
-	if (s == *src || !(0 < inst->reg_count && inst->reg_count <= 32)) return 4;
+	if (errno || !(0 < inst->reg_count && inst->reg_count <= 32)) return 4;
 	*src = s;
 	inst->reg_count--;
 	if (parse_char (inst, src, ']')) return 4;
@@ -370,7 +372,7 @@ static void pprint_R(RAsmOp *op, const inst_t *inst) {
 }
 
 static void pprint_R_IMM(RAsmOp *op, const inst_t *inst) {
-	snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, 0x%" PRIx32, mnemonics[inst->id], inst->uf ? "." : "", regs[inst->rA], inst->imm);
+	snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, %s, 0x%" PRIx32, mnemonics[inst->id], inst->uf ? "." : "", regs[inst->rA], regs[inst->rB], inst->imm);
 }
 
 static void pprint_U(RAsmOp *op, const inst_t *inst) {
@@ -443,7 +445,7 @@ static void pprint_M(RAsmOp *op, const inst_t *inst) {
 }
 
 static void pprint_MP(RAsmOp *op, const inst_t *inst) {
-	static const char *protections[] = {"", "R", "W", "RE"};
+	static const char *protections[] = {"", "R", "RW", "RE"};
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s, %s, %s", mnemonics[inst->id], regs[inst->rA], regs[inst->rB], protections[inst->mem_flags]);
 }
 
@@ -474,7 +476,7 @@ static int assemble(RAsm *a, RAsmOp *op, const char *src) {
 	}
 	if (!mnemlen) {
 		for (int i = 0; i < R_ARRAY_SIZE (adj); i++) {
-			if (!strncasecmp (buf, bc[i], 3)) {
+			if (!strncasecmp (buf, adj[i], 3)) {
 				mnemlen = 3;
 				break;
 			}
