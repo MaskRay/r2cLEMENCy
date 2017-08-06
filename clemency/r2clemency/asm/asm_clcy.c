@@ -29,7 +29,8 @@ static int parse_cc(inst_t *inst, const char **src) {
 			int l = strlen (conditions[i]);
 			if (!strncasecmp (*src, conditions[i], l) && !isalnum((*src)[l])) {
 				*src += l;
-				return i;
+				inst->cc = i;
+				return 0;
 			}
 		}
 	return -1;
@@ -222,7 +223,6 @@ static int assemble_MOV_LOW_SIGNED(inst_t *inst, const char **src) {
 
 static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
 	int bit_size = 27;
-	if (parse_space (inst, src)) return 1;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
 	if (parse_imm_ut (inst, src, 27)) return 1;
@@ -235,7 +235,6 @@ static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
 
 static int assemble_B_CC_R(inst_t *inst, const char **src) {
 	int bit_size = 18;
-	if (parse_space (inst, src)) return 1;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
@@ -466,10 +465,11 @@ static int assemble(RAsm *a, RAsmOp *op, const char *src) {
 		int l = strlen (bc[i]), ll;
 		if (!strncasecmp (buf, bc[i], l)) {
 			for (int j = 0; j < R_ARRAY_SIZE (conditions); j++)
-				if (conditions[j] && (ll = strlen (conditions[j]), !strncasecmp (buf+l, conditions[j], ll))) {
+				if (conditions[j] && (ll = strlen (conditions[j]), !strncasecmp (buf+l, conditions[j], ll) && !isalnum (buf[l+ll]))) {
 					mnemlen = l;
 					break;
 				}
+			break;
 		}
 	}
 	if (!mnemlen) {
