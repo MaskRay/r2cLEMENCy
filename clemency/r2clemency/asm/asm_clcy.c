@@ -20,6 +20,9 @@ static const char *mnemonics[] = {
 #undef INS_4
 };
 
+static int parse_cc(inst_t *inst, const char **src) {
+}
+
 static int parse_comma(inst_t *inst, const char **src) {
 	while (isspace (**src)) ++*src;
 	if (*(*src)++ != ',') return -1;
@@ -60,6 +63,24 @@ static int parse_rB(inst_t *inst, const char **src) {
 static int parse_rC(inst_t *inst, const char **src) {
 	inst->rC = parse_reg (inst, src);
 	return 0 <= inst->rC < 32 ? 0 : -1;
+}
+
+static int parse_space(inst_t *inst, const char **src) {
+	const char *s = *src;
+	while (isspace (*s)) s++;
+	if (s == *src) return -1;
+	*src = s;
+	return 0;
+}
+
+static int parse_uf(inst_t *inst, const char **src) {
+	if (**src == '.') {
+		inst->uf = 1;
+		++*src;
+	} else {
+		inst->uf = 0;
+	}
+	return 0;
 }
 
 static int assemble_R(inst_t *inst, const char **src) {
@@ -300,6 +321,7 @@ static int dump_27bit(const ut8 *buf, int bitoff) {
 }
 
 static int assemble(RAsm *a, RAsmOp *op, const char *buf) {
+	return 0;
 }
 
 static int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {

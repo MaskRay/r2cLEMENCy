@@ -99,9 +99,9 @@ static void r_write_plain27(ut8* buf, ut27 val, int boff) {
 }
 
 typedef struct {
-  ut64 pc, code, opcode;
+  ut64 code, opcode;
   int id, size;
-  ut32 funct;
+  ut32 pc, funct;
   st32 imm;
   ut16 cc, reg_count;
   ut8 adj_rb, arith_signed, is_imm, mem_flags, rA, rB, rC, rw, uf;

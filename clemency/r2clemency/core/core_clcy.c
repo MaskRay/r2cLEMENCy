@@ -20,7 +20,7 @@ static void clemency_help(RCore *core) {
 static void hexdump_9byte(RCore *core, const char *arg, int len) {
 	// TODO > blocksize
 	ut16 *buf = malloc (len);
-	r_io_read_at (core->io, core->offset, buf, len);
+	r_io_read_at (core->io, core->offset, (ut8 *)buf, len);
 	for (int i = 0; (i + 1) * 2 <= len; i++) {
 		if (i % 16 == 0) {
 			if (i) r_cons_newline ();
@@ -35,7 +35,7 @@ static void hexdump_9byte(RCore *core, const char *arg, int len) {
 static void hexdump_18word(RCore *core, const char *arg, int len) {
 	// TODO > blocksize
 	ut16 *buf = malloc (len);
-	r_io_read_at (core->io, core->offset, buf, len);
+	r_io_read_at (core->io, core->offset, (ut8 *)buf, len);
 	for (int i = 0; (i + 1) * 4 <= len; i++) {
 		if (i % 8 == 0) {
 			if (i) r_cons_newline ();
@@ -50,7 +50,7 @@ static void hexdump_18word(RCore *core, const char *arg, int len) {
 static void hexdump_27tri(RCore *core, const char *arg, int len) {
 	// TODO > blocksize
 	ut16 *buf = malloc (len);
-	r_io_read_at (core->io, core->offset, buf, len);
+	r_io_read_at (core->io, core->offset, (ut8 *)buf, len);
 	for (int i = 0; (i + 1) * 6 <= len; i++) {
 		if (i % 8 == 0) {
 			if (i) r_cons_newline ();

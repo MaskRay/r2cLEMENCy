@@ -5,11 +5,11 @@ SDB ?= @echo 'Please set SDB to the path of radare2/shlr/sdb/sdb' \#
 R2_CFLAGS+=$(shell pkg-config --cflags r_core r_asm r_anal r_util)
 R2_LDFLAGS+=$(shell pkg-config --libs r_core r_asm r_anal r_util)
 
-CFLAGS+=-g
+CFLAGS+=-g -std=gnu11
 
 R2_CFLAGS+=-fPIC
 R2_LDFLAGS+=-shared
-R2PM_PLUGDIR=$(shell r2 -H RHOMEDIR)/plugins
+R2PM_PLUGDIR := $(shell r2 -H RHOMEDIR)/plugins
 R2PM_SHAREDIR = $(dir $(shell r2 -H MAGICPATH))
 
 SO := anal/anal_clcy.$(LIBEXT) asm/asm_clcy.$(LIBEXT) debug/debug_clcy.$(LIBEXT) \
@@ -30,12 +30,15 @@ all: $(DEPS)
 clean:
 	rm -f $(DEPS)
 
-install: $(DEPS)
+$(R2PM_PLUGDIR):
+	mkdir $@
+
+install: $(DEPS) | $(R2PM_PLUGDIR)
 	$(INSTALL) $(SO) $(R2PM_PLUGDIR)/
 	$(INSTALL) asm/d/clcy.sdb $(R2PM_SHAREDIR)/opcodes/
 	$(INSTALL) syscall/d/linux-clcy-27.sdb $(R2PM_SHAREDIR)/syscall/
 
-symstall: $(DEPS)
+symstall: $(DEPS) | $(R2PM_PLUGDIR)
 	ln -sfr $(SO) $(R2PM_PLUGDIR)/
 	ln -sfr asm/d/clcy.sdb  $(R2PM_SHAREDIR)/opcodes/
 	ln -sfr syscall/d/linux-clcy-27.sdb $(R2PM_SHAREDIR)/syscall/
