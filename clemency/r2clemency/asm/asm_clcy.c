@@ -51,10 +51,18 @@ static int parse_end(const char **src) {
 	return **src ? -1 : 0;
 }
 
-static int parse_imm(inst_t *inst, const char **src) {
+static int parse_imm_st(inst_t *inst, const char **src, int bits) {
 	char *s = (char *)*src;
 	inst->imm = strtol (s, &s, 0);
-	if (s == *src) return -1;
+	if (s == *src || !(-1 << bits-1 <= inst->imm && inst->imm < 1 << bits-1)) return -1;
+	*src = s;
+	return 0;
+}
+
+static int parse_imm_ut(inst_t *inst, const char **src, int bits) {
+	char *s = (char *)*src;
+	inst->imm = strtol (s, &s, 0);
+	if (s == *src || !(0 <= inst->imm && inst->imm < 1 << bits)) return -1;
 	*src = s;
 	return 0;
 }
@@ -141,7 +149,8 @@ static int assemble_R_IMM(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return -1;
 	if (parse_rB (inst, src)) return 2;
 	if (parse_comma (inst, src)) return -2;
-	if (parse_imm (inst, src)) return 3;
+	if (parse_imm_st (inst, src, 28)) return 3; // TODO differentiate st/ut e.g. dvi/dvis
+	inst->imm &= 0x7ffffff;
 	if (parse_end (src)) return 3;
 	inst->size = 3;
 	inst->code = 0 FORM_R_IMM;
@@ -178,7 +187,8 @@ static int assemble_BIN_R_IMM(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return -1;
-	if (parse_imm (inst, src)) return 2;
+	if (parse_imm_st (inst, src, 14)) return 2;
+	inst->imm &= (1 << 14) - 1;
 	if (parse_end (src)) return 2;
 	inst->size = 3;
 	inst->code = 0 FORM_BIN_R_IMM;
@@ -190,7 +200,7 @@ static int assemble_MOV_LOW_HI(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return -1;
-	if (parse_imm (inst, src)) return 2;
+	if (parse_imm_ut (inst, src, 17)) return 2;
 	if (parse_end (src)) return 2;
 	inst->size = 3;
 	inst->code = 0 FORM_MOV_LOW_HI;
@@ -198,7 +208,16 @@ static int assemble_MOV_LOW_HI(inst_t *inst, const char **src) {
 }
 
 static int assemble_MOV_LOW_SIGNED(inst_t *inst, const char **src) {
-	return assemble_MOV_LOW_HI (inst, src);
+	int bit_size = 27;
+	if (parse_space (inst, src)) return 1;
+	if (parse_rA (inst, src)) return 1;
+	if (parse_comma (inst, src)) return -1;
+	if (parse_imm_st (inst, src, 17)) return 2;
+	inst->imm &= (1 << 17) - 1;
+	if (parse_end (src)) return 2;
+	inst->size = 3;
+	inst->code = 0 FORM_MOV_LOW_HI;
+	return 0;
 }
 
 static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
@@ -206,7 +225,8 @@ static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
 	if (parse_space (inst, src)) return 1;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
-	if (parse_imm (inst, src)) return 1;
+	if (parse_imm_ut (inst, src, 27)) return 1;
+	inst->imm = inst->imm - inst->pc & 0x7ffffff;
 	if (parse_end (src)) return 1;
 	inst->size = 3;
 	inst->code = 0 FORM_B_CC_OFF;
@@ -228,9 +248,8 @@ static int assemble_B_CC_R(inst_t *inst, const char **src) {
 static int assemble_B_OFF(inst_t *inst, const char **src) {
 	int bit_size = 36;
 	if (parse_space (inst, src)) return 1;
-	if (parse_cc (inst, src)) return 1;
-	if (parse_space (inst, src)) return 1;
-	if (parse_imm (inst, src)) return 1;
+	if (parse_imm_ut (inst, src, 27)) return 1;
+	inst->imm = inst->imm - inst->pc & 0x7ffffff;
 	if (parse_end (src)) return 1;
 	inst->size = 4;
 	inst->code = 0 FORM_B_OFF;
@@ -240,8 +259,7 @@ static int assemble_B_OFF(inst_t *inst, const char **src) {
 static int assemble_B_LOC(inst_t *inst, const char **src) {
 	int bit_size = 36;
 	if (parse_cc (inst, src)) return 1;
-	if (parse_space (inst, src)) return 1;
-	if (parse_imm (inst, src)) return 1;
+	if (parse_imm_ut (inst, src, 27)) return 1;
 	if (parse_end (src)) return 1;
 	inst->size = 4;
 	inst->code = 0 FORM_B_LOC;
@@ -293,20 +311,24 @@ static int assemble_M(inst_t *inst, const char **src) {
 	} else if (**src == 'd') {
 		++*src;
 		inst->adj_rb = 2;
+	} else {
+		inst->adj_rb = 0;
 	}
 	if (parse_space (inst, src)) return 1;
 	if (parse_rA (inst, src)) return 1;
 	if (parse_comma (inst, src)) return 1;
-	if (parse_rB (inst, src)) return 2;
 	if (parse_char (inst, src, '[')) return 1;
-	if (parse_imm (inst, src)) return 1;
-	if (parse_comma (inst, src)) return 1;
+	if (parse_rB (inst, src)) return 2;
+	if (parse_imm_st (inst, src, 27)) return 3;
+	inst->imm &= 0x7ffffff;
+	if (parse_comma (inst, src)) return -3;
 	char *s = (char *)*src;
 	inst->reg_count = strtol (s, &s, 0);
-	if (s == *src) return -1;
+	if (s == *src || !(0 < inst->reg_count && inst->reg_count <= 32)) return 4;
 	*src = s;
-	if (parse_char (inst, src, ']')) return 1;
-	if (parse_end (src)) return 2;
+	inst->reg_count--;
+	if (parse_char (inst, src, ']')) return 4;
+	if (parse_end (src)) return 4;
 	inst->size = 6;
 	inst->code = 0 FORM_M;
 	return 0;
@@ -415,9 +437,9 @@ static void pprint_M(RAsmOp *op, const inst_t *inst) {
 		strcpy (op->buf_asm, mnemonics[I_invalid]);
 	else {
 		if (inst->imm >= 0)
-			snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, [%s+0x%" PRIx32 ", %" PRIx32 "]", mnemonics[inst->id], adj[inst->adj_rb], regs[inst->rA], regs[inst->rB], inst->imm, inst->reg_count);
+			snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, [%s+0x%" PRIx32 ", %" PRIi16 "]", mnemonics[inst->id], adj[inst->adj_rb], regs[inst->rA], regs[inst->rB], inst->imm, inst->reg_count);
 		else
-			snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, [%s-0x%" PRIx32 ", %" PRIx32 "]", mnemonics[inst->id], adj[inst->adj_rb], regs[inst->rA], regs[inst->rB], -inst->imm, inst->reg_count);
+			snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, [%s-0x%" PRIx32 ", %" PRIi16 "]", mnemonics[inst->id], adj[inst->adj_rb], regs[inst->rA], regs[inst->rB], -inst->imm, inst->reg_count);
 	}
 }
 
