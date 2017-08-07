@@ -3,7 +3,7 @@
 #define MASK_9 0x1ff
 #define MASK_18 0x3ffff
 #define MASK_27 0x7ffffff
-#define MASK_54 0x3fffffffffffff
+#define MASK_54 0x3fffffffffffffull
 #define BIT_26 (1L << 26)
 #define BIT_53 (1L << 53)
 

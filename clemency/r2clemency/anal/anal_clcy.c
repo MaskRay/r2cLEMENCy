@@ -178,10 +178,19 @@ static int clcy_custom_binop(RAnalEsil *esil) {
 	case '<': a = b << c; break;
 	case '>':
 		if (op1[1] == '>' && op1[2] == '>') { // arithmetic shift right
-			if (mf) a = (st64)b << 10 >> 10 >> (c & 63);
-			else a = (st32)b << 5 >> 5 >> (c & 31);
+			if (mf) a = (st64)b << 10 >> 10 >> c;
+			else a = (st32)b << 5 >> 5 >> c;
 		} else // logical shift right
 			a = b >> c;
+		break;
+	case 'r':
+		if (op1[1] == '<') { // rotate left
+			if (mf) a = ((ut64)b << c % 54 | (ut32)b >> (54 - c % 54)) & MASK_54;
+			else a = ((ut32)b << c % 27 | (ut32)b >> (27 - c % 27)) & MASK_27;
+		} else { // rotate right
+			if (mf) a = ((ut64)b >> c % 54 | (ut32)b << (54 - c % 54)) & MASK_54;
+			else a = ((ut32)b >> c % 27 | (ut32)b << (27 - c % 27)) & MASK_27;
+		}
 		break;
 	}
 	if (mf)
@@ -455,17 +464,17 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 		TYPE_E (orm, OR, "%s,%s,%s,'m|,binop", rC, rB, rA);
 		TYPE_E (re, RET, "ra,pc,=");
 		TYPE_E (rf, MOV, "fl,%s,=", rA);
-		TYPE (rl, ROL);
-		TYPE (rli, ROL);
-		TYPE (rlim, ROL);
-		TYPE (rlm, ROL);
+		TYPE_E (rl, ROL, "%s,%s,%s,'r<<,binop", rC, rB, rA);
+		TYPE_E (rli, ROL, "%d,%s,%s,'r<<,binop", imm, rB, rA);
+		TYPE_E (rlim, ROL, "%d,%s,%s,'mr<<,binop", imm, rB, rA);
+		TYPE_E (rlm, ROL, "%s,%s,%s,'mr<<,binop", rC, rB, rA);
 		TYPE_E (rmp, SWI, "%d,$", I_rmp);
 		TYPE_E (rnd, SWI, "%d,$", I_rnd);
 		TYPE_E (rndm, SWI, "%d,$", I_rndm);
-		TYPE (rr, ROR);
-		TYPE (rri, ROR);
-		TYPE (rrim, ROR);
-		TYPE (rrm, ROR);
+		TYPE_E (rr, ROR, "%s,%s,%s,'r>>,binop", rC, rB, rA);
+		TYPE_E (rri, ROR, "%d,%s,%s,'r>>,binop", imm, rB, rA);
+		TYPE_E (rrim, ROR, "%d,%s,%s,'mr>>,binop", imm, rB, rA);
+		TYPE_E (rrm, ROR, "%s,%s,%s,'mr>>,binop", rC, rB, rA);
 		TYPE_E (sa, SAR, "%s,%s,%s,'>>>,binop", rC, rB, rA);
 		TYPE_E (sai, SAR, "%d,%s,%s,'>>>,binop", imm, rB, rA);
 		TYPE_E (saim, SAR, "%d,%s,%s,'m>>>,binop", imm, rB, rA);
@@ -498,8 +507,8 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 		TYPE_E (xr, XOR, "%s,%s,%s,'^,binop", rC, rB, rA);
 		TYPE_E (xri, XOR, "%d,%s,%s,'^,binop", imm, rB, rA);
 		TYPE_E (xrm, XOR, "%s,%s,%s,'m^,binop", rC, rB, rA);
-		TYPE (zes, CPL);
-		TYPE (zew, CPL);
+		TYPE_E (zes, CPL, "%d,%s,&,%s,=", MASK_9, rB, rA);
+		TYPE_E (zew, CPL, "%d,%s,&,%s,=", MASK_18, rB, rA);
 		}
 	} else {
 		op->size = 1;
@@ -1403,7 +1412,7 @@ static RAnalPlugin r_anal_plugin_clcy = {
 	.desc = "cLEMENCy analysis",
 	.license = "LGPL3",
 	.arch = "clcy",
-	.bits = 27,
+	.bits = 64, // we use 64-bit integers in esil to emulate 27-bit and 54-bit
 	.esil_init = esil_clcy_init,
 	.esil_fini = esil_clcy_fini,
 	.esil_intr = esil_clcy_intr,
