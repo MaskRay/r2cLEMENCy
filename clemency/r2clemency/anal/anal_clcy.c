@@ -217,7 +217,7 @@ static int clcy_custom_binop(RAnalEsil *esil) {
 				flags |= 4 | (f == '/' ? 2 : 0);
 			break;
 		}
-		r_anal_esil_reg_write (esil, "fl", flags);
+		write_fl (esil, flags);
 	}
 	free (rC);
 	free (rB);
@@ -250,6 +250,16 @@ static int clcy_custom_compare(RAnalEsil *esil) {
 	free (rB);
 	free (rA);
 	free (op);
+	return 1;
+}
+
+static int clcy_custom_dmt(RAnalEsil *esil) {
+	int iA = esil_pop_int (esil), iB = esil_pop_int (esil), iC = esil_pop_int (esil),
+		a = read_reg (esil, iA), b = read_reg (esil, iB), c = read_reg (esil, iC), len;
+	ut8 *buf = malloc (c * 2);
+	if (!buf) return 0;
+	len = r_anal_esil_mem_read (esil, b, buf, c * 2);
+	r_anal_esil_mem_write (esil, a, buf, len);
 	return 1;
 }
 
@@ -442,7 +452,7 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 		TYPE_E (cmm, CMP, "%s,%s,'m,compare", rB, rA);
 		TYPE_E (dbrk, TRAP, "0,%d,$", R_ANAL_TRAP_BREAKPOINT);
 		TYPE_E (di, MOV, "0x1ff0,4,0x7ffffff,%s,^,<<,&,0x7ffe00f,fl,&,|", rA);
-		TYPE (dmt, MOV);
+		TYPE_E (dmt, MOV, "%d,%d,%d,dmt", inst.rC, inst.rB, inst.rA);
 		TYPE_E (dv, DIV, "%s,%s,%s,'%s/,binop", rC, rB, rA, if_uf);
 		TYPE (dvf, DIV);
 		TYPE (dvfm, DIV);
@@ -638,6 +648,7 @@ static int esil_clcy_init (RAnalEsil *esil) {
 	r_anal_esil_set_op (esil, "binop", clcy_custom_binop);
 	r_anal_esil_set_op (esil, "carryop", clcy_custom_carryop);
 	r_anal_esil_set_op (esil, "compare", clcy_custom_compare);
+	r_anal_esil_set_op (esil, "dmt", clcy_custom_dmt);
 	r_anal_esil_set_op (esil, "load", clcy_custom_load);
 	r_anal_esil_set_op (esil, "store", clcy_custom_store);
 	r_anal_esil_set_op (esil, "unop", clcy_custom_unop);
