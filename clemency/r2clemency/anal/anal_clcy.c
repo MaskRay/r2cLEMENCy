@@ -135,7 +135,8 @@ static int clcy_custom_binop(RAnalEsil *esil) {
 	char f = '+';
 	bool immC = !isalpha (rC[0]);
 	int t, iA = get_reg_id (rA), iB = get_reg_id (rB), iC = immC ? -1 : get_reg_id (rC);
-	if (*op1 == '.') uf = true, op1++;
+	if (*op1 == '.')
+		uf = true, op1++;
 	if (*op1 == 'm') {
 		mf = true;
 		msb = BIT_53;
@@ -225,6 +226,33 @@ static int clcy_custom_binop(RAnalEsil *esil) {
 	return 1;
 }
 
+static int clcy_custom_compare(RAnalEsil *esil) {
+	ut64 a, b, r, msb;
+	char *op = r_anal_esil_pop (esil),
+		*rA = r_anal_esil_pop (esil), *rB = r_anal_esil_pop (esil);
+	bool immB = !isalpha (rB[0]);
+	int iA = get_reg_id (rA), iB = immB ? -1 : get_reg_id (rB);
+	if (op[1] == 'm') {
+		msb = BIT_53;
+		a = read_reg_pair (esil, iA);
+		b = immB ? r_num_get (NULL, rB) : read_reg_pair (esil, iB);
+	} else {
+		msb = BIT_26;
+		a = read_reg (esil, iA);
+		b = immB ? r_num_get (NULL, rB) : read_reg (esil, iB);
+	}
+	r = a - b;
+	write_fl (esil, read_fl (esil) & ~15
+						| !r
+						| (r & msb << 1 ? 2 : 0)
+						| ((r & msb) != (r & msb) ? 4 : 0)
+						| (r & msb ? 8 : 0));
+	free (rB);
+	free (rA);
+	free (op);
+	return 1;
+}
+
 static int clcy_custom_unop(RAnalEsil *esil) {
 	bool uf = false, mf;
 	ut64 a, b, msb;
@@ -232,7 +260,8 @@ static int clcy_custom_unop(RAnalEsil *esil) {
 	char *rA = r_anal_esil_pop (esil);
 	char *rB = r_anal_esil_pop (esil);
 	int iA = get_reg_id (rA), iB = get_reg_id (rB);
-	if (*op1 == '.') uf = true, op1++;
+	if (*op1 == '.')
+		uf = true, op1++;
 	if (*op1 == 'm') {
 		mf = true;
 		msb = BIT_53;
@@ -314,7 +343,8 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 #define TYPE_E(inst_, type_, ...) case I_##inst_: op->type = R_ANAL_OP_TYPE_##type_; r_strbuf_setf (&op->esil, __VA_ARGS__); break
 	ZERO_FILL (*op);
 
-	const char *rA = regs[inst.rA], *rB = regs[inst.rB], *rC = regs[inst.rC];
+	const char *rA = regs[inst.rA], *rB = regs[inst.rB], *rC = regs[inst.rC],
+		*if_uf = inst.uf ? "." : "";
 	int imm = (int)inst.imm; // st32 -> int to avoid PRIi32
 	op->type = R_ANAL_OP_TYPE_NULL;
 	op->jump = op->fail = -1;
@@ -326,9 +356,9 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 		switch (inst.id) {
 		case I_b:
 			op->type = R_ANAL_OP_TYPE_JMP | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
-			op->jump = addr + inst.imm;
+			op->jump = addr + imm & MASK_27;
 			op->fail = addr + op->size;
-			CC_SWITCH (",?{,%d,pc,+=,}", inst.imm);
+			CC_SWITCH (",?{,%d,pc,=,}", op->jump);
 			break;
 		case I_br:
 			op->type = R_ANAL_OP_TYPE_RCALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
@@ -339,33 +369,33 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 			break;
 		case I_bra:
 			op->type = R_ANAL_OP_TYPE_JMP;
-			op->jump = inst.imm;
+			op->jump = imm;
 			op->fail = addr + op->size;
-			r_strbuf_setf (&op->esil, "%d,pc,=", imm);
+			r_strbuf_setf (&op->esil, "%d,pc,=", op->jump);
 			break;
 		case I_brr:
 			op->type = R_ANAL_OP_TYPE_JMP;
-			op->jump = addr + inst.imm;
+			op->jump = addr + imm & MASK_27;
 			op->fail = addr + op->size;
-			r_strbuf_setf (&op->esil, "%d,pc,+=", imm);
+			r_strbuf_setf (&op->esil, "%d,pc,=", op->jump);
 			break;
 		case I_c:
 			op->type = R_ANAL_OP_TYPE_CALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
-			op->jump = addr + inst.imm;
+			op->jump = addr + imm & MASK_27;
 			op->fail = addr + op->size;
-			CC_SWITCH (",?{,3,pc,+,ra,=,%d,pc,+=,}", imm);
+			CC_SWITCH (",?{,3,pc,+,ra,=,%d,pc,=,}", op->jump);
 			break;
 		case I_caa:
 			op->type = R_ANAL_OP_TYPE_CALL;
-			op->jump = inst.imm;
+			op->jump = imm;
 			op->fail = addr + op->size;
-			r_strbuf_setf (&op->esil, "4,pc,+,ra,=,%d,pc,=", imm);
+			r_strbuf_setf (&op->esil, "4,pc,+,ra,=,%d,pc,=", op->jump);
 			break;
 		case I_car:
 			op->type = R_ANAL_OP_TYPE_CALL;
-			op->jump = addr + inst.imm;
+			op->jump = addr + imm & MASK_27;
 			op->fail = addr + op->size;
-			r_strbuf_setf (&op->esil, "4,pc,+,ra,=,%d,pc,+=", imm);
+			r_strbuf_setf (&op->esil, "4,pc,+,ra,=,%d,pc,=", op->jump);
 			break;
 		case I_cr:
 			op->type = R_ANAL_OP_TYPE_RCALL | (inst.cc == CC_always ? 0 : R_ANAL_OP_TYPE_COND);
@@ -389,40 +419,40 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 			op->refptr = 2;
 			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,2,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
 			break;
-		TYPE_E (ad, ADD, "%s,%s,%s,'+,binop", rC, rB, rA);
-		TYPE_E (adc, ADD, "%s,%s,%s,'+,carryop", rC, rB, rA);
-		TYPE_E (adci, ADD, "%d,%s,%s,'+,carryop", imm, rB, rA);
-		TYPE_E (adcim, ADD, "%d,%s,%s,'m+,carryop", imm, rB, rA);
-		TYPE_E (adcm, ADD, "%s,%s,%s,'m+,carryop", rC, rB, rA);
+		TYPE_E (ad, ADD, "%s,%s,%s,'%s+,binop", rC, rB, rA, if_uf);
+		TYPE_E (adc, ADD, "%s,%s,%s,'%s+,carryop", rC, rB, rA, if_uf);
+		TYPE_E (adci, ADD, "%d,%s,%s,'%s+,carryop", imm, rB, rA, if_uf);
+		TYPE_E (adcim, ADD, "%d,%s,%s,'%sm+,carryop", imm, rB, rA, if_uf);
+		TYPE_E (adcm, ADD, "%s,%s,%s,'%sm+,carryop", rC, rB, rA, if_uf);
 		TYPE (adf, ADD);
 		TYPE (adfm, ADD);
-		TYPE_E (adi, ADD, "%d,%s,%s,'+,binop", imm, rB, rA);
-		TYPE_E (adim, ADD, "%d,%s,%s,'m+,binop", imm, rB, rA);
-		TYPE_E (adm, ADD, "%s,%s,%s,'m+,binop", rC, rB, rA);
-		TYPE_E (an, AND, "%s,%s,%s,'&,binop", rC, rB, rA);
-		TYPE_E (ani, AND, "%d,%s,%s,'&,binop", imm, rB, rA);
-		TYPE_E (anm, AND, "%s,%s,%s,'m&,binop", rC, rB, rA);
-		TYPE_E (bf, XOR, "%s,%s,'~,unop", rB, rA);
-		TYPE_E (bfm, XOR, "%s,%s,'m~,unop", rB, rA);
-		TYPE_E (cm, CMP, "%s,%s,==", rB, rA); // XXX
+		TYPE_E (adi, ADD, "%d,%s,%s,'%s+,binop", imm, rB, rA, if_uf);
+		TYPE_E (adim, ADD, "%d,%s,%s,'%sm+,binop", imm, rB, rA, if_uf);
+		TYPE_E (adm, ADD, "%s,%s,%s,'%sm+,binop", rC, rB, rA, if_uf);
+		TYPE_E (an, AND, "%s,%s,%s,'%s&,binop", rC, rB, rA, if_uf);
+		TYPE_E (ani, AND, "%d,%s,%s,'%s&,binop", imm, rB, rA, if_uf);
+		TYPE_E (anm, AND, "%s,%s,%s,'%sm&,binop", rC, rB, rA, if_uf);
+		TYPE_E (bf, XOR, "%s,%s,'%s~,unop", rB, rA, if_uf);
+		TYPE_E (bfm, XOR, "%s,%s,'%sm~,unop", rB, rA, if_uf);
+		TYPE_E (cm, CMP, "%s,%s,',compare", rB, rA);
 		TYPE (cmf, CMP);
 		TYPE (cmfm, CMP);
-		TYPE_E (cmi, CMP, "%d,%s,==", imm, rA); // XXX
-		TYPE (cmim, CMP);
-		TYPE (cmm, CMP);
+		TYPE_E (cmi, CMP, "%d,%s,',compare", imm, rA);
+		TYPE_E (cmim, CMP, "%d,%s,'m,compare", imm, rA);
+		TYPE_E (cmm, CMP, "%s,%s,'m,compare", rB, rA);
 		TYPE_E (dbrk, TRAP, "0,%d,$", R_ANAL_TRAP_BREAKPOINT);
 		TYPE_E (di, MOV, "0x1ff0,4,0x7ffffff,%s,^,<<,&,0x7ffe00f,fl,&,|", rA);
 		TYPE (dmt, MOV);
-		TYPE_E (dv, DIV, "%s,%s,%s,'/,binop", rC, rB, rA);
+		TYPE_E (dv, DIV, "%s,%s,%s,'%s/,binop", rC, rB, rA, if_uf);
 		TYPE (dvf, DIV);
 		TYPE (dvfm, DIV);
-		TYPE_E (dvi, DIV, "%d,%s,%s,'/,binop", imm, rB, rA);
-		TYPE_E (dvim, DIV, "%d,%s,%s,'m/,binop", imm, rB, rA);
-		TYPE_E (dvis, DIV, "%d,%s,%s,'//,binop", imm, rB, rA);
-		TYPE_E (dvism, DIV, "%d,%s,%s,'m//,binop", imm, rB, rA);
-		TYPE_E (dvm, DIV, "%s,%s,%s,'m/,binop", rC, rB, rA);
-		TYPE_E (dvs, DIV, "%s,%s,%s,'//,binop", rC, rB, rA);
-		TYPE_E (dvsm, DIV, "%s,%s,%s,'m//,binop", rC, rB, rA);
+		TYPE_E (dvi, DIV, "%d,%s,%s,'%s/,binop", imm, rB, rA, if_uf);
+		TYPE_E (dvim, DIV, "%d,%s,%s,'%sm/,binop", imm, rB, rA, if_uf);
+		TYPE_E (dvis, DIV, "%d,%s,%s,'%s//,binop", imm, rB, rA, if_uf);
+		TYPE_E (dvism, DIV, "%d,%s,%s,'%sm//,binop", imm, rB, rA, if_uf);
+		TYPE_E (dvm, DIV, "%s,%s,%s,'%sm/,binop", rC, rB, rA, if_uf);
+		TYPE_E (dvs, DIV, "%s,%s,%s,'%s//,binop", rC, rB, rA, if_uf);
+		TYPE_E (dvsm, DIV, "%s,%s,%s,'%sm//,binop", rC, rB, rA, if_uf);
 		TYPE_E (ei, MOV, "0x1ff0,4,%s,<<,&,0x7ffe00f,fl,&,|", rA);
 		TYPE (fti, MOV);
 		TYPE (ftim, MOV);
@@ -430,83 +460,83 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 		TYPE (ir, RET);
 		TYPE (itf, MOV);
 		TYPE (itfm, MOV);
-		TYPE_E (md, MOD, "%s,%s,%s,'%%,binop", rC, rB, rA);
+		TYPE_E (md, MOD, "%s,%s,%s,'%s%%,binop", rC, rB, rA, if_uf);
 		TYPE (mdf, MOD);
 		TYPE (mdfm, MOD);
-		TYPE_E (mdi, MOD, "%d,%s,%s,'%%,binop", imm, rB, rA);
-		TYPE_E (mdim, MOD, "%d,%s,%s,'m%%,binop", imm, rB, rA);
-		TYPE_E (mdis, MOD, "%d,%s,%s,'%%%%,binop", imm, rB, rA);
-		TYPE_E (mdism, MOD, "%d,%s,%s,'m%%%%,binop", imm, rB, rA);
-		TYPE_E (mdm, MOD, "%s,%s,%s,'m%%,binop", rC, rB, rA);
-		TYPE_E (mds, MOD, "%s,%s,%s,'%%%%,binop", rC, rB, rA);
-		TYPE_E (mdsm, MOD, "%s,%s,%s,'m%%%%,binop", rC, rB, rA);
+		TYPE_E (mdi, MOD, "%d,%s,%s,'%s%%,binop", imm, rB, rA, if_uf);
+		TYPE_E (mdim, MOD, "%d,%s,%s,'%sm%%,binop", imm, rB, rA, if_uf);
+		TYPE_E (mdis, MOD, "%d,%s,%s,'%s%%%%,binop", imm, rB, rA, if_uf);
+		TYPE_E (mdism, MOD, "%d,%s,%s,'%sm%%%%,binop", imm, rB, rA, if_uf);
+		TYPE_E (mdm, MOD, "%s,%s,%s,'%sm%%,binop", rC, rB, rA, if_uf);
+		TYPE_E (mds, MOD, "%s,%s,%s,'%s%%%%,binop", rC, rB, rA, if_uf);
+		TYPE_E (mdsm, MOD, "%s,%s,%s,'%sm%%%%,binop", rC, rB, rA, if_uf);
 		TYPE_E (mh, MOV, "0x3ff,%s,&,10,%d,<<,|,%s,=,", rA, imm, rA);
 		TYPE_E (ml, MOV, "%d,%s,=", imm, rA);
 		TYPE_E (ms, MOV, "%d,%d,&,%s,=", MASK_27, imm, rA);
-		TYPE_E (mu, MUL, "%s,%s,%s,'*,binop", rC, rB, rA);
+		TYPE_E (mu, MUL, "%s,%s,%s,'%s*,binop", rC, rB, rA, if_uf);
 		TYPE (muf, MUL);
 		TYPE (mufm, MUL);
-		TYPE_E (mui, MUL, "%d,%s,%s,'*,binop", imm, rB, rA);
-		TYPE_E (muim, MUL, "%d,%s,%s,'m*,binop", imm, rB, rA);
-		TYPE_E (muis, MUL, "%d,%s,%s,'**,binop", imm, rB, rA);
-		TYPE_E (muism, MUL, "%d,%s,%s,'m**,binop", imm, rB, rA);
-		TYPE_E (mum, MUL, "%s,%s,%s,'m*,binop", rC, rB, rA);
-		TYPE_E (mus, MUL, "%s,%s,%s,'**,binop", rC, rB, rA);
-		TYPE_E (musm, MUL, "%s,%s,%s,'m**,binop", rC, rB, rA);
-		TYPE_E (ng, SUB, "%s,%s,'-,unop", rB, rA);
+		TYPE_E (mui, MUL, "%d,%s,%s,'%s*,binop", imm, rB, rA, if_uf);
+		TYPE_E (muim, MUL, "%d,%s,%s,'%sm*,binop", imm, rB, rA, if_uf);
+		TYPE_E (muis, MUL, "%d,%s,%s,'%s**,binop", imm, rB, rA, if_uf);
+		TYPE_E (muism, MUL, "%d,%s,%s,'%sm**,binop", imm, rB, rA, if_uf);
+		TYPE_E (mum, MUL, "%s,%s,%s,'%sm*,binop", rC, rB, rA, if_uf);
+		TYPE_E (mus, MUL, "%s,%s,%s,'%s**,binop", rC, rB, rA, if_uf);
+		TYPE_E (musm, MUL, "%s,%s,%s,'%sm**,binop", rC, rB, rA, if_uf);
+		TYPE_E (ng, SUB, "%s,%s,'%s-,unop", rB, rA, if_uf);
 		TYPE (ngf, SUB);
 		TYPE (ngfm, SUB);
-		TYPE_E (ngm, SUB, "%s,%s,'m-,unop", rB, rA);
-		TYPE_E (nt, NOT, "%s,%s,'!,unop", rB, rA);
-		TYPE_E (ntm, NOT, "%s,%s,'m!,unop", rB, rA);
-		TYPE_E (or, OR, "%s,%s,%s,'|,binop", rC, rB, rA);
-		TYPE_E (ori, OR, "%d,%s,%s,'|,binop", imm, rB, rA);
-		TYPE_E (orm, OR, "%s,%s,%s,'m|,binop", rC, rB, rA);
+		TYPE_E (ngm, SUB, "%s,%s,'%sm-,unop", rB, rA, if_uf);
+		TYPE_E (nt, NOT, "%s,%s,'%s!,unop", rB, rA, if_uf);
+		TYPE_E (ntm, NOT, "%s,%s,'%sm!,unop", rB, rA, if_uf);
+		TYPE_E (or, OR, "%s,%s,%s,'%s|,binop", rC, rB, rA, if_uf);
+		TYPE_E (ori, OR, "%d,%s,%s,'%s|,binop", imm, rB, rA, if_uf);
+		TYPE_E (orm, OR, "%s,%s,%s,'%sm|,binop", rC, rB, rA, if_uf);
 		TYPE_E (re, RET, "ra,pc,=");
 		TYPE_E (rf, MOV, "fl,%s,=", rA);
-		TYPE_E (rl, ROL, "%s,%s,%s,'r<<,binop", rC, rB, rA);
-		TYPE_E (rli, ROL, "%d,%s,%s,'r<<,binop", imm, rB, rA);
-		TYPE_E (rlim, ROL, "%d,%s,%s,'mr<<,binop", imm, rB, rA);
-		TYPE_E (rlm, ROL, "%s,%s,%s,'mr<<,binop", rC, rB, rA);
+		TYPE_E (rl, ROL, "%s,%s,%s,'%sr<<,binop", rC, rB, rA, if_uf);
+		TYPE_E (rli, ROL, "%d,%s,%s,'%sr<<,binop", imm, rB, rA, if_uf);
+		TYPE_E (rlim, ROL, "%d,%s,%s,'%smr<<,binop", imm, rB, rA, if_uf);
+		TYPE_E (rlm, ROL, "%s,%s,%s,'%smr<<,binop", rC, rB, rA, if_uf);
 		TYPE_E (rmp, SWI, "%d,$", I_rmp);
 		TYPE_E (rnd, SWI, "%d,$", I_rnd);
 		TYPE_E (rndm, SWI, "%d,$", I_rndm);
-		TYPE_E (rr, ROR, "%s,%s,%s,'r>>,binop", rC, rB, rA);
-		TYPE_E (rri, ROR, "%d,%s,%s,'r>>,binop", imm, rB, rA);
-		TYPE_E (rrim, ROR, "%d,%s,%s,'mr>>,binop", imm, rB, rA);
-		TYPE_E (rrm, ROR, "%s,%s,%s,'mr>>,binop", rC, rB, rA);
-		TYPE_E (sa, SAR, "%s,%s,%s,'>>>,binop", rC, rB, rA);
-		TYPE_E (sai, SAR, "%d,%s,%s,'>>>,binop", imm, rB, rA);
-		TYPE_E (saim, SAR, "%d,%s,%s,'m>>>,binop", imm, rB, rA);
-		TYPE_E (sam, SAR, "%s,%s,%s,'m>>>,binop", rC, rB, rA);
-		TYPE_E (sb, SUB, "%s,%s,%s,'-,binop", rC, rB, rA);
-		TYPE_E (sbc, SUB, "%s,%s,%s,'-,carryop", rC, rB, rA);
-		TYPE_E (sbci, SUB, "%d,%s,%s,'-,carryop", imm, rB, rA);
-		TYPE_E (sbcim, SUB, "%d,%s,%s,'m-,carryop", imm, rB, rA);
-		TYPE_E (sbcm, SUB, "%s,%s,%s,'m-,carryop", rC, rB, rA);
+		TYPE_E (rr, ROR, "%s,%s,%s,'%sr>>,binop", rC, rB, rA, if_uf);
+		TYPE_E (rri, ROR, "%d,%s,%s,'%sr>>,binop", imm, rB, rA, if_uf);
+		TYPE_E (rrim, ROR, "%d,%s,%s,'%smr>>,binop", imm, rB, rA, if_uf);
+		TYPE_E (rrm, ROR, "%s,%s,%s,'%smr>>,binop", rC, rB, rA, if_uf);
+		TYPE_E (sa, SAR, "%s,%s,%s,'%s>>>,binop", rC, rB, rA, if_uf);
+		TYPE_E (sai, SAR, "%d,%s,%s,'%s>>>,binop", imm, rB, rA, if_uf);
+		TYPE_E (saim, SAR, "%d,%s,%s,'%sm>>>,binop", imm, rB, rA, if_uf);
+		TYPE_E (sam, SAR, "%s,%s,%s,'%sm>>>,binop", rC, rB, rA, if_uf);
+		TYPE_E (sb, SUB, "%s,%s,%s,'%s-,binop", rC, rB, rA, if_uf);
+		TYPE_E (sbc, SUB, "%s,%s,%s,'%s-,carryop", rC, rB, rA, if_uf);
+		TYPE_E (sbci, SUB, "%d,%s,%s,'%s-,carryop", imm, rB, rA, if_uf);
+		TYPE_E (sbcim, SUB, "%d,%s,%s,'%sm-,carryop", imm, rB, rA, if_uf);
+		TYPE_E (sbcm, SUB, "%s,%s,%s,'%sm-,carryop", rC, rB, rA, if_uf);
 		TYPE (sbf, SUB);
 		TYPE (sbfm, SUB);
-		TYPE_E (sbi, SUB, "%d,%s,%s,'-,binop", imm, rB, rA);
-		TYPE_E (sbim, SUB, "%d,%s,%s,'m-,binop", imm, rB, rA);
-		TYPE_E (sbm, SUB, "%s,%s,%s,'m-,binop", rC, rB, rA);
+		TYPE_E (sbi, SUB, "%d,%s,%s,'%s-,binop", imm, rB, rA, if_uf);
+		TYPE_E (sbim, SUB, "%d,%s,%s,'%sm-,binop", imm, rB, rA, if_uf);
+		TYPE_E (sbm, SUB, "%s,%s,%s,'%sm-,binop", rC, rB, rA, if_uf);
 		TYPE_E (ses, CPL, "%d,55,55,%s,<<,>>>>,&,%s,=", MASK_27, rB, rA);
 		TYPE_E (sew, CPL, "%d,46,46,%s,<<,>>>>,&,%s,=", MASK_27, rB, rA);
 		TYPE_E (sf, MOV, "%s,fl,=", rA);
-		TYPE_E (sl, SHL, "%s,%s,%s,'<<,binop", rC, rB, rA);
-		TYPE_E (sli, SHL, "%d,%s,%s,'<<,binop", imm, rB, rA);
-		TYPE_E (slim, SHL, "%d,%s,%s,'m<<,binop", imm, rB, rA);
-		TYPE_E (slm, SHL, "%s,%s,%s,'m<<,binop", rC, rB, rA);
+		TYPE_E (sl, SHL, "%s,%s,%s,'%s<<,binop", rC, rB, rA, if_uf);
+		TYPE_E (sli, SHL, "%d,%s,%s,'%s<<,binop", imm, rB, rA, if_uf);
+		TYPE_E (slim, SHL, "%d,%s,%s,'%sm<<,binop", imm, rB, rA, if_uf);
+		TYPE_E (slm, SHL, "%s,%s,%s,'%sm<<,binop", rC, rB, rA, if_uf);
 		TYPE_E (smp, SWI, "%d,$", I_smp);
-		TYPE_E (sr, SHR, "%s,%s,%s,'>>,binop", rC, rB, rA);
-		TYPE_E (sri, SHR, "%d,%s,%s,'>>,binop", imm, rB, rA);
-		TYPE_E (srim, SHR, "%d,%s,%s,'m>>,binop", imm, rB, rA);
-		TYPE_E (srm, SHR, "%s,%s,%s,'m>>,binop", rC, rB, rA);
+		TYPE_E (sr, SHR, "%s,%s,%s,'%s>>,binop", rC, rB, rA, if_uf);
+		TYPE_E (sri, SHR, "%d,%s,%s,'%s>>,binop", imm, rB, rA, if_uf);
+		TYPE_E (srim, SHR, "%d,%s,%s,'%sm>>,binop", imm, rB, rA, if_uf);
+		TYPE_E (srm, SHR, "%s,%s,%s,'%sm>>,binop", rC, rB, rA, if_uf);
 		TYPE_E (sts, STORE, "%d,%d,%d,%d,%d,1,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
 		TYPE_E (stt, STORE, "%d,%d,%d,%d,%d,3,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
 		TYPE_E (stw, STORE, "%d,%d,%d,%d,%d,2,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
-		TYPE_E (xr, XOR, "%s,%s,%s,'^,binop", rC, rB, rA);
-		TYPE_E (xri, XOR, "%d,%s,%s,'^,binop", imm, rB, rA);
-		TYPE_E (xrm, XOR, "%s,%s,%s,'m^,binop", rC, rB, rA);
+		TYPE_E (xr, XOR, "%s,%s,%s,'%s^,binop", rC, rB, rA, if_uf);
+		TYPE_E (xri, XOR, "%d,%s,%s,'%s^,binop", imm, rB, rA, if_uf);
+		TYPE_E (xrm, XOR, "%s,%s,%s,'%sm^,binop", rC, rB, rA, if_uf);
 		TYPE_E (zes, CPL, "%d,%s,&,%s,=", MASK_9, rB, rA);
 		TYPE_E (zew, CPL, "%d,%s,&,%s,=", MASK_18, rB, rA);
 		}
@@ -539,128 +569,6 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 	cond = inst.Condition;
 
 	switch (opcode) {
-	case CLCY_AD: // Add
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%s,+,%s,=",rC,rB,rA);
-		break;
-	case CLCY_ADC: // Add with curry
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%s,+,cf,+,%s,=",rC,rB,rA);
-		break;
-	case CLCY_ADCI: // Add immediate with curry
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%"PFMT64x",+,cf,+,%s,=",rB,imm,rA);
-		break;
-	// XXX
-	case CLCY_ADCIM: // Add immediate multi reg with curry
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%"PFMT64x",+,%s,=",rB,imm,rA);
-		break;
-	// XXX
-	case CLCY_ADCM: // Add multi reg with curry
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%s,+,%s,=",rC,rB,rA);
-		break;
-	case CLCY_ADF: // Add floating point
-		op->size = 3;
-		break;
-	case CLCY_ADFM: // Add floating point multi reg
-		op->size = 3;
-		break;
-	case CLCY_ADI: // Add immediate
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%"PFMT64x",+,%s,=",rB,imm,rA);
-		break;
-	// XXX
-	case CLCY_ADIM: // Add immediate multi reg
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		break;
-	// XXX
-	case CLCY_ADM: // Add multi reg
-		op->type = R_ANAL_OP_TYPE_ADD;
-		op->size = 3;
-		break;
-	case CLCY_AN: // And
-		op->type = R_ANAL_OP_TYPE_AND;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%s,&,%s,=,",rC,rB,rA);
-		break;
-	case CLCY_ANI: // And immediate
-		op->type = R_ANAL_OP_TYPE_AND;
-		op->size = 3;
-		r_strbuf_setf (&op->esil, "%s,%"PFMT64x",&,%s,=,",rB,imm,rA);
-		break;
-	// XXX
-	case CLCY_ANM: // And multi reg
-		op->type = R_ANAL_OP_TYPE_AND;
-		op->size = 3;
-		break;
-	case CLCY_B: // Branch conditional
-		op->type = R_ANAL_OP_TYPE_CJMP;
-		op->size = 3;
-		op->jump = imm;
-		op->fail = addr + op->size;
-		int cond = ((buf[0] & 0xc0) >> 6) | ((buf[1] & 3) << 2);
-		switch(cond) {
-			case 0: // Not equal / not zero
-				r_strbuf_setf(&op->esil, "zf,!,?{,%"PFMT64d",pc,+=,}",imm);
-				break;
-			case 1: // Equal / Zero
-				r_strbuf_setf(&op->esil, "zf,?{,%"PFMT64d",pc,+=,}",imm);
-				break;
-			case 2: // Less Than
-				r_strbuf_setf(&op->esil, "zf,!,cf,&,?{,%"PFMT64d",pc,+=,}",imm);
-				break;
-			case 3: // Less Than or Equal
-				r_strbuf_setf(&op->esil, "zf,cf,|,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 4: // Greater Than
-				r_strbuf_setf(&op->esil, "zf,cf,&,!,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 5: // Greater Than or Equal
-				r_strbuf_setf(&op->esil, "cf,!,zf,|,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 6: // Not overflow
-				r_strbuf_setf(&op->esil, "of,!,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 7: // Overflow
-				r_strbuf_setf(&op->esil, "of,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 8: // Not signed
-				r_strbuf_setf(&op->esil, "sf,!,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 9: // Signed
-				r_strbuf_setf(&op->esil, "sf,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 10: // Signed less than
-				r_strbuf_setf(&op->esil, "of,sf,==,!,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 11: // Signed less than or Equal
-				r_strbuf_setf(&op->esil, "of,sf,==,!,zf,|,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 12: // Signed greater than
-				r_strbuf_setf(&op->esil, "zf,!,of,sf,==,&,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			case 13: // Sined Greater Than or Equal
-				r_strbuf_setf(&op->esil, "of,sf,==,?{,%"PFMT64d",pc,+=,}", imm);
-				break;
-			default: // Always
-				r_strbuf_setf(&op->esil, "%"PFMT64d",pc,+=,", imm);
-				break;
-		}
-		break;
-	case CLCY_BF: // Bit flip
-		op->type = R_ANAL_OP_TYPE_NOT;
-		op->size = 3;
-		r_strbuf_setf(&op->esil,"%s,%s,!=,",rB, rA);
-		break;
 	// XXX
 	case CLCY_BFM: // Bit flip multi reg
 		op->type = R_ANAL_OP_TYPE_NOT;
@@ -1397,6 +1305,7 @@ static int set_reg_profile(RAnal *anal) {
 static int esil_clcy_init (RAnalEsil *esil) {
 	r_anal_esil_set_op (esil, "binop", clcy_custom_binop);
 	r_anal_esil_set_op (esil, "carryop", clcy_custom_carryop);
+	r_anal_esil_set_op (esil, "compare", clcy_custom_compare);
 	r_anal_esil_set_op (esil, "load", clcy_custom_load);
 	r_anal_esil_set_op (esil, "store", clcy_custom_store);
 	r_anal_esil_set_op (esil, "unop", clcy_custom_unop);
