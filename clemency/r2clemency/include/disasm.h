@@ -16,3 +16,5 @@ void decode_U_EXTEND(inst_t *inst, const ut16 *src);
 void decode_RANDOM(inst_t *inst, const ut16 *src);
 void decode_M(inst_t *inst, const ut16 *src);
 void decode_MP(inst_t *inst, const ut16 *src);
+
+int parse_reg(const char **src);

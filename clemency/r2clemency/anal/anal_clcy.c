@@ -10,7 +10,7 @@
 #include "../include/clemency.h"
 #include "../include/disasm.h"
 
-#define CC_SWITCH(...) \
+#define CC_SWITCH(...)													\
 	switch (inst.cc) { \
 	case CC_n: r_strbuf_setf (&op->esil, "zf,!" __VA_ARGS__); break; \
 	case CC_e: r_strbuf_setf (&op->esil, "zf" __VA_ARGS__); break; \
@@ -29,6 +29,235 @@
 	case CC_invalid: op->type = R_ANAL_OP_TYPE_ILL; break; \
 	case CC_always: r_strbuf_setf (&op->esil, "1" __VA_ARGS__); break; \
 	}
+
+static ut64 get_reg_id(const char *name) {
+	char *p = (char *)name;
+	return parse_reg(&name);
+}
+
+static ut64 read_fl(RAnalEsil *esil) {
+	ut64 fl;
+	r_anal_esil_get_parm (esil, "fl", &fl);
+	return fl;
+}
+
+static ut64 read_reg(RAnalEsil *esil, int reg) {
+	ut64 l;
+	r_anal_esil_get_parm (esil, regs[reg], &l);
+	return l;
+}
+
+static ut64 read_reg_pair(RAnalEsil *esil, int reg) {
+	return read_reg (esil, reg) << 27 | read_reg (esil, reg+1 & 31);
+}
+
+static void write_fl(RAnalEsil *esil, ut64 v) {
+	r_anal_esil_reg_write (esil, "fl", v & MASK_27);
+}
+
+static void write_reg(RAnalEsil *esil, int reg, ut64 v) {
+	r_anal_esil_reg_write (esil, regs[reg], v & MASK_27);
+}
+
+static void write_reg_pair(RAnalEsil *esil, int reg, ut64 v) {
+	write_reg (esil, reg, v >> 27 & MASK_27);
+	write_reg (esil, reg + 1 & 31, v & MASK_27);
+}
+
+static int esil_pop_int(RAnalEsil *esil) {
+	char *p = r_anal_esil_pop (esil);
+	int ret = r_num_get (NULL, p);
+	free (p);
+	return ret;
+}
+
+static int clcy_custom_load(RAnalEsil *esil) {
+	int nytes = esil_pop_int (esil), adj_rb = esil_pop_int (esil),
+		iA = esil_pop_int (esil), iB = esil_pop_int (esil),
+		offset = esil_pop_int (esil), reg_count = esil_pop_int (esil),
+		rB = read_reg (esil, iB), temp = rB, tempPC = read_reg (esil, 31);
+	ut16 buf[reg_count * nytes], *p = buf;
+	if (adj_rb == 2)
+		temp -= reg_count * nytes;
+	if (!r_anal_esil_mem_read (esil, temp + offset & MASK_27, (ut8 *)buf, sizeof buf))
+		return 0;
+	for (int i = 0; i < reg_count; i++) {
+		switch (nytes) {
+		case 1: write_reg (esil, iA, p[0]); break;
+		case 2: write_reg (esil, iA, p[1] << 9 | p[0]); break;
+		case 3: write_reg (esil, iA, p[1] << 18 | p[0] << 9 | p[2]); break;
+		}
+		iA = iA + 1 & 31;
+		p += nytes;
+	}
+	if (adj_rb == 1)
+		write_reg (esil, iB, rB + reg_count * nytes);
+	else if (adj_rb == 2)
+		write_reg (esil, iB, temp);
+	write_reg (esil, 31, tempPC);
+	return 1;
+}
+
+static int clcy_custom_store(RAnalEsil *esil) {
+	int nytes = esil_pop_int (esil), adj_rb = esil_pop_int (esil),
+		iA = esil_pop_int (esil), iB = esil_pop_int (esil),
+		offset = esil_pop_int (esil), reg_count = esil_pop_int (esil),
+		rB = read_reg (esil, iB), temp = rB;
+	ut16 buf[reg_count * nytes], *p = buf;
+	if (adj_rb == 2)
+		temp -= reg_count * nytes;
+	for (int i = 0; i < reg_count; i++) {
+		ut64 t = read_reg (esil, iA);
+		switch (nytes) {
+		case 1: p[0] = t & MASK_9; break;
+		case 2: p[1] = t >> 9 & MASK_9; p[0] = t & MASK_9; break;
+		case 3: p[1] = t >> 18 & MASK_9; p[0] = t >> 9 & MASK_9; p[2] = t & MASK_9; break;
+		}
+		iA = iA + 1 & 31;
+		p += nytes;
+	}
+	if (!r_anal_esil_mem_write (esil, temp + offset & MASK_27, (ut8 *)buf, sizeof buf))
+		esil->trap = 1;
+	if (adj_rb == 1)
+		write_reg (esil, iB, rB + reg_count * nytes);
+	else if (adj_rb == 2)
+		write_reg (esil, iB, temp);
+	return 1;
+}
+
+static int clcy_custom_binop(RAnalEsil *esil) {
+	bool uf = false, mf;
+	ut64 a, b, c, msb;
+	char *op = r_anal_esil_pop (esil), *op1 = op + 1;
+	char *rA = r_anal_esil_pop (esil);
+	char *rB = r_anal_esil_pop (esil);
+	char *rC = r_anal_esil_pop (esil);
+	char f = '+';
+	bool immC = !isalpha (rC[0]);
+	int t, iA = get_reg_id (rA), iB = get_reg_id (rB), iC = immC ? -1 : get_reg_id (rC);
+	if (*op1 == '.') uf = true, op1++;
+	if (*op1 == 'm') {
+		mf = true;
+		msb = BIT_53;
+		op1++;
+		b = read_reg_pair (esil, iB);
+		c = immC ? r_num_get (NULL, rC) : read_reg_pair (esil, iC);
+	} else {
+		mf = false;
+		msb = BIT_26;
+		b = read_reg (esil, iB);
+		c = immC ? r_num_get (NULL, rC) : read_reg (esil, iC);
+	}
+	switch (*op1) {
+	case '+': a = b + c; break;
+	case '-': a = b - c; f = '-'; break;
+	case '*':
+		f = '*';
+		if (op1[1] == '*') { // signed multiply
+			if (mf) a = ((st64)b << 10 >> 10) * ((st64)c << 10 >> 10);
+			else a = ((st32)b << 5 >> 5) * ((st32)c << 5 >> 5);
+		} else { // unsigned multiply
+			a = b * c;
+		}
+		break;
+	case '/':
+		f = '/';
+		if (!c) {
+			esil->trap = R_ANAL_TRAP_DIVBYZERO;
+			esil->trap_code = 0;
+		} else if (op1[1] == '/') { // signed divide
+			if (mf) a = ((st64)b << 10 >> 10) / ((st64)c << 10 >> 10);
+			else a = ((st32)b << 5 >> 5) / ((st32)c << 5 >> 5);
+		} else { // unsigned divide
+			a = b / c;
+		}
+		break;
+	case '&': a = b & c; break;
+	case '|': a = b | c; break;
+	case '^': a = b ^ c; break;
+	case '<': a = b << c; break;
+	case '>':
+		if (op1[1] == '>' && op1[2] == '>') { // arithmetic shift right
+			if (mf) a = (st64)b << 10 >> 10 >> (c & 63);
+			else a = (st32)b << 5 >> 5 >> (c & 31);
+		} else // logical shift right
+			a = b >> c;
+		break;
+	}
+	if (mf)
+		write_reg_pair (esil, iA, a);
+	else
+		write_reg (esil, iA, a);
+	if (uf) {
+		ut64 flags = read_fl (esil) & ~15 | !a | (a & msb ? 8 : 0);
+		// Carry & Overflow
+		switch (f) {
+		case '+':
+		case '*':
+			if (f == '+' && a & msb << 1)
+				flags |= 2;
+			if ((b & msb) == (c & msb) && (b & msb) != (a & msb))
+				flags |= 4 | (f == '*' ? 2 : 0);
+			break;
+		case '-':
+		case '/':
+			if (f == '-' && a & msb << 1)
+				flags |= 2;
+			if ((b & msb) != (c & msb) && (b & msb) != (a & msb))
+				flags |= 4 | (f == '/' ? 2 : 0);
+			break;
+		}
+		r_anal_esil_reg_write (esil, "fl", flags);
+	}
+	free (rC);
+	free (rB);
+	free (rA);
+	free (op);
+	return 1;
+}
+
+static int clcy_custom_unop(RAnalEsil *esil) {
+	bool uf = false, mf;
+	ut64 a, b, msb;
+	char *op = r_anal_esil_pop (esil), *op1 = op + 1;
+	char *rA = r_anal_esil_pop (esil);
+	char *rB = r_anal_esil_pop (esil);
+	int iA = get_reg_id (rA), iB = get_reg_id (rB);
+	if (*op1 == '.') uf = true, op1++;
+	if (*op1 == 'm') {
+		mf = true;
+		msb = BIT_53;
+		op1++;
+		b = read_reg_pair (esil, iB);
+	} else {
+		mf = false;
+		msb = BIT_26;
+		b = read_reg (esil, iB);
+	}
+	switch (*op1) {
+	case '!': a = !b; break;
+	case '~': a = ~b; break;
+	case '-': a = -b; break;
+	}
+	if (mf)
+		write_reg_pair (esil, iA, a);
+	else
+		write_reg (esil, iA, a);
+	if (uf)
+		write_fl (esil, read_fl (esil) & ~15
+							| !a
+							| (a & msb << 1 ? 2 : 0)
+							| ((b & msb) != (a & msb) ? 4 : 0)
+							| (a & msb ? 8 : 0));
+	free (rB);
+	free (rA);
+	free (op);
+	return 1;
+}
+
+static int clcy_custom_carryop(RAnalEsil *esil) {
+	return 1;
+}
 
 static int reg_read(RAnalEsil *esil, const char *regname, ut64 *num) {
 	RRegItem *reg = r_reg_get (esil->anal->reg, regname, -1);
@@ -51,7 +280,7 @@ static int reg_write(RAnalEsil *esil, const char *regname, ut64 num) {
 
 }
 
-static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len) {
+static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len) {
 	inst_t inst = {.pc = addr};
 
 #define FORMAT(fmt) decode_##fmt (&inst, (const ut16*)src);
@@ -139,33 +368,33 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		case I_lds:
 			op->type = R_ANAL_OP_TYPE_LOAD;
 			op->refptr = 1;
-			r_strbuf_setf (&op->esil, "%s,%d,+,[2],&,0x1ff,%s,=", rB, imm, rA);
+			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,1,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
 			break;
 		case I_ldt:
 			op->type = R_ANAL_OP_TYPE_LOAD;
 			op->refptr = 3;
-			r_strbuf_setf (&op->esil, "%s,%d,+,[4],&,0x7ffffff,%s,=", rB, imm, rA);
+			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,3,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
 			break;
 		case I_ldw:
 			op->type = R_ANAL_OP_TYPE_LOAD;
 			op->refptr = 2;
-			r_strbuf_setf (&op->esil, "%s,%d,+,[4],&,0x3ffff,%s,=", rB, imm, rA);
+			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,2,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
 			break;
-		TYPE_E (ad, ADD, "%s,%s,+,%s,=", rC, rB, rA);
-		TYPE_E (adc, ADD, "cf,%s,%s,+,+,%s,=", rC, rB, rA);
-		TYPE_E (adci, ADD, "cf,%d,%s,+,+,%s,=", imm, rB, rA);
-		TYPE (adcim, ADD);
-		TYPE (adcm, ADD);
+		TYPE_E (ad, ADD, "%s,%s,%s,'+,binop", rC, rB, rA);
+		TYPE_E (adc, ADD, "%s,%s,%s,'+,carryop", rC, rB, rA);
+		TYPE_E (adci, ADD, "%d,%s,%s,'+,carryop", imm, rB, rA);
+		TYPE_E (adcim, ADD, "%d,%s,%s,'m+,carryop", imm, rB, rA);
+		TYPE_E (adcm, ADD, "%s,%s,%s,'m+,carryop", rC, rB, rA);
 		TYPE (adf, ADD);
 		TYPE (adfm, ADD);
-		TYPE_E (adi, ADD, "%d,%s,+,%s,=", imm, rB, rA);
-		TYPE (adim, ADD);
-		TYPE (adm, ADD);
-		TYPE_E (an, AND, "%s,%s,&,%s,=", rC, rB, rA);
-		TYPE_E (ani, AND, "%d,%s,&,%s,=", imm, rB, rA);
-		TYPE (anm, AND);
-		TYPE_E (bf, NOT, "%s,%s,!=", rB, rA);
-		TYPE (bfm, NOT);
+		TYPE_E (adi, ADD, "%d,%s,%s,'+,binop", imm, rB, rA);
+		TYPE_E (adim, ADD, "%d,%s,%s,'m+,binop", imm, rB, rA);
+		TYPE_E (adm, ADD, "%s,%s,%s,'m+,binop", rC, rB, rA);
+		TYPE_E (an, AND, "%s,%s,%s,'&,binop", rC, rB, rA);
+		TYPE_E (ani, AND, "%d,%s,%s,'&,binop", imm, rB, rA);
+		TYPE_E (anm, AND, "%s,%s,%s,'m&,binop", rC, rB, rA);
+		TYPE_E (bf, XOR, "%s,%s,'~,unop", rB, rA);
+		TYPE_E (bfm, XOR, "%s,%s,'m~,unop", rB, rA);
 		TYPE_E (cm, CMP, "%s,%s,==", rB, rA); // XXX
 		TYPE (cmf, CMP);
 		TYPE (cmfm, CMP);
@@ -173,18 +402,18 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (cmim, CMP);
 		TYPE (cmm, CMP);
 		TYPE_E (dbrk, TRAP, "0,%d,$", R_ANAL_TRAP_BREAKPOINT);
-		TYPE_E (di, MOV, "0x1ff0,4,-1,%s,^,<<,&,0x7ffe00f,fl,&,|", rA);
+		TYPE_E (di, MOV, "0x1ff0,4,0x7ffffff,%s,^,<<,&,0x7ffe00f,fl,&,|", rA);
 		TYPE (dmt, MOV);
-		TYPE_E (dv, DIV, "%s,%s,/,%s,=", rC, rB, rA);
+		TYPE_E (dv, DIV, "%s,%s,%s,'/,binop", rC, rB, rA);
 		TYPE (dvf, DIV);
 		TYPE (dvfm, DIV);
-		TYPE_E (dvi, DIV, "%d,%s,/,%s,=", imm, rB, rA);
-		TYPE (dvim, DIV);
-		TYPE_E (dvis, DIV, "%d,%s,/,%s,=", imm, rB, rA); // XXX
-		TYPE (dvism, DIV);
-		TYPE (dvm, DIV);
-		TYPE (dvs, DIV);
-		TYPE (dvsm, DIV);
+		TYPE_E (dvi, DIV, "%d,%s,%s,'/,binop", imm, rB, rA);
+		TYPE_E (dvim, DIV, "%d,%s,%s,'m/,binop", imm, rB, rA);
+		TYPE_E (dvis, DIV, "%d,%s,%s,'//,binop", imm, rB, rA);
+		TYPE_E (dvism, DIV, "%d,%s,%s,'m//,binop", imm, rB, rA);
+		TYPE_E (dvm, DIV, "%s,%s,%s,'m/,binop", rC, rB, rA);
+		TYPE_E (dvs, DIV, "%s,%s,%s,'//,binop", rC, rB, rA);
+		TYPE_E (dvsm, DIV, "%s,%s,%s,'m//,binop", rC, rB, rA);
 		TYPE_E (ei, MOV, "0x1ff0,4,%s,<<,&,0x7ffe00f,fl,&,|", rA);
 		TYPE (fti, MOV);
 		TYPE (ftim, MOV);
@@ -192,37 +421,38 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (ir, RET);
 		TYPE (itf, MOV);
 		TYPE (itfm, MOV);
-		TYPE_E (md, MOD, "%s,%s,%%,%s,=", rC, rB, rA);
+		TYPE_E (md, MOD, "%s,%s,%s,'%%,binop", rC, rB, rA);
 		TYPE (mdf, MOD);
 		TYPE (mdfm, MOD);
-		TYPE_E (mdi, MOD, "%d,%s,%%,%s,=", imm, rB, rA);
-		TYPE (mdim, MOD);
-		TYPE_E (mdis, MOD, "%d,%s,%%,%s,=", imm, rB, rA);
-		TYPE (mdm, MOD);
-		TYPE_E (mds, MOD, "%s,%s,%%,%s,=", rC, rB, rA);
-		TYPE (mdsm, MOD);
+		TYPE_E (mdi, MOD, "%d,%s,%s,'%%,binop", imm, rB, rA);
+		TYPE_E (mdim, MOD, "%d,%s,%s,'m%%,binop", imm, rB, rA);
+		TYPE_E (mdis, MOD, "%d,%s,%s,'%%%%,binop", imm, rB, rA);
+		TYPE_E (mdism, MOD, "%d,%s,%s,'m%%%%,binop", imm, rB, rA);
+		TYPE_E (mdm, MOD, "%s,%s,%s,'m%%,binop", rC, rB, rA);
+		TYPE_E (mds, MOD, "%s,%s,%s,'%%%%,binop", rC, rB, rA);
+		TYPE_E (mdsm, MOD, "%s,%s,%s,'m%%%%,binop", rC, rB, rA);
 		TYPE_E (mh, MOV, "0x3ff,%s,&,10,%d,<<,|,%s,=,", rA, imm, rA);
 		TYPE_E (ml, MOV, "%d,%s,=", imm, rA);
-		TYPE_E (ms, MOV, "%d,%s,=", imm, rA);
-		TYPE_E (mu, MUL, "%s,%s,*,%s,=", rC, rB, rA);
+		TYPE_E (ms, MOV, "%d,%d,&,%s,=", MASK_27, imm, rA);
+		TYPE_E (mu, MUL, "%s,%s,%s,'*,binop", rC, rB, rA);
 		TYPE (muf, MUL);
 		TYPE (mufm, MUL);
-		TYPE_E (mui, MUL, "%d,%s,*,%s,=", imm, rB, rA);
-		TYPE (muim, MUL);
-		TYPE_E (muis, MUL, "%d,%s,*,%s,=", imm, rB, rA); // XXX
-		TYPE (muism, MUL);
-		TYPE (mum, MUL);
-		TYPE_E (mus, MUL, "%s,%s,*,%s,=", rC, rB, rA); // XXX
-		TYPE (musm, MUL);
-		TYPE_E (ng, SUB, "%s,0,-,%s,=", rB, rA);
+		TYPE_E (mui, MUL, "%d,%s,%s,'*,binop", imm, rB, rA);
+		TYPE_E (muim, MUL, "%d,%s,%s,'m*,binop", imm, rB, rA);
+		TYPE_E (muis, MUL, "%d,%s,%s,'**,binop", imm, rB, rA);
+		TYPE_E (muism, MUL, "%d,%s,%s,'m**,binop", imm, rB, rA);
+		TYPE_E (mum, MUL, "%s,%s,%s,'m*,binop", rC, rB, rA);
+		TYPE_E (mus, MUL, "%s,%s,%s,'**,binop", rC, rB, rA);
+		TYPE_E (musm, MUL, "%s,%s,%s,'m**,binop", rC, rB, rA);
+		TYPE_E (ng, SUB, "%s,%s,'-,unop", rB, rA);
 		TYPE (ngf, SUB);
 		TYPE (ngfm, SUB);
-		TYPE (ngm, SUB);
-		TYPE_E (nt, NOT, "%s,!,%s,=", rB, rA);
-		TYPE (ntm, NOT);
-		TYPE_E (or, OR, "%s,%s,|,%s,=", rC, rB, rA);
-		TYPE_E (ori, OR, "%d,%s,|,%s,=", imm, rB, rA);
-		TYPE (orm, OR);
+		TYPE_E (ngm, SUB, "%s,%s,'m-,unop", rB, rA);
+		TYPE_E (nt, NOT, "%s,%s,'!,unop", rB, rA);
+		TYPE_E (ntm, NOT, "%s,%s,'m!,unop", rB, rA);
+		TYPE_E (or, OR, "%s,%s,%s,'|,binop", rC, rB, rA);
+		TYPE_E (ori, OR, "%d,%s,%s,'|,binop", imm, rB, rA);
+		TYPE_E (orm, OR, "%s,%s,%s,'m|,binop", rC, rB, rA);
 		TYPE_E (re, RET, "ra,pc,=");
 		TYPE_E (rf, MOV, "fl,%s,=", rA);
 		TYPE (rl, ROL);
@@ -236,38 +466,38 @@ static int clemency_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int 
 		TYPE (rri, ROR);
 		TYPE (rrim, ROR);
 		TYPE (rrm, ROR);
-		TYPE_E (sa, ROR, "%s,%s,>>>>,%s,=", rC, rB, rA);
-		TYPE_E (sai, ROR, "%d,%s,>>>>,%s,=", imm, rB, rA);
-		TYPE (saim, SAR);
-		TYPE (sam, SAR);
-		TYPE_E (sb, SUB, "%s,%s,-,%s,=", rC, rB, rA);
-		TYPE_E (sbc, SUB, "cf,%s,%s,-,-,%s,=", rC, rB, rA);
-		TYPE_E (sbci, SUB, "cf,%d,%s,-,-,%s,=", imm, rB, rA);
-		TYPE (sbcim, SUB);
-		TYPE (sbcm, SUB);
+		TYPE_E (sa, SAR, "%s,%s,%s,'>>>,binop", rC, rB, rA);
+		TYPE_E (sai, SAR, "%d,%s,%s,'>>>,binop", imm, rB, rA);
+		TYPE_E (saim, SAR, "%d,%s,%s,'m>>>,binop", imm, rB, rA);
+		TYPE_E (sam, SAR, "%s,%s,%s,'m>>>,binop", rC, rB, rA);
+		TYPE_E (sb, SUB, "%s,%s,%s,'-,binop", rC, rB, rA);
+		TYPE_E (sbc, SUB, "%s,%s,%s,'-,carryop", rC, rB, rA);
+		TYPE_E (sbci, SUB, "%d,%s,%s,'-,carryop", imm, rB, rA);
+		TYPE_E (sbcim, SUB, "%d,%s,%s,'m-,carryop", imm, rB, rA);
+		TYPE_E (sbcm, SUB, "%s,%s,%s,'m-,carryop", rC, rB, rA);
 		TYPE (sbf, SUB);
 		TYPE (sbfm, SUB);
-		TYPE_E (sbi, SUB, "%d,%s,-,%s,=", imm, rB, rA);
-		TYPE (sbim, SUB);
-		TYPE (sbm, SUB);
-		TYPE (ses, CPL);
-		TYPE (sew, CPL);
+		TYPE_E (sbi, SUB, "%d,%s,%s,'-,binop", imm, rB, rA);
+		TYPE_E (sbim, SUB, "%d,%s,%s,'m-,binop", imm, rB, rA);
+		TYPE_E (sbm, SUB, "%s,%s,%s,'m-,binop", rC, rB, rA);
+		TYPE_E (ses, CPL, "%d,55,55,%s,<<,>>>>,&,%s,=", MASK_27, rB, rA);
+		TYPE_E (sew, CPL, "%d,46,46,%s,<<,>>>>,&,%s,=", MASK_27, rB, rA);
 		TYPE_E (sf, MOV, "%s,fl,=", rA);
-		TYPE_E (sl, SHL, "%s,%s,<<,%s=", rC, rB, rA);
-		TYPE_E (sli, SHL, "%d,%s,<<,%s=", imm, rB, rA);
-		TYPE (slim, SHL);
-		TYPE (slm, SHL);
+		TYPE_E (sl, SHL, "%s,%s,%s,'<<,binop", rC, rB, rA);
+		TYPE_E (sli, SHL, "%d,%s,%s,'<<,binop", imm, rB, rA);
+		TYPE_E (slim, SHL, "%d,%s,%s,'m<<,binop", imm, rB, rA);
+		TYPE_E (slm, SHL, "%s,%s,%s,'m<<,binop", rC, rB, rA);
 		TYPE_E (smp, SWI, "%d,$", I_smp);
-		TYPE_E (sr, SHR, "%s,%s,>>,%s=", rC, rB, rA);
-		TYPE_E (sri, SHR, "%d,%s,>>,%s=", imm, rB, rA);
-		TYPE (srim, SHR);
-		TYPE (srm, SHR);
-		TYPE (sts, STORE);
-		TYPE (stt, STORE);
-		TYPE (stw, STORE);
-		TYPE_E (xr, XOR, "%s,%s,^,%s,=", rC, rB, rA);
-		TYPE_E (xri, XOR, "%d,%s,^,%s,=", imm, rB, rA);
-		TYPE (xrm, XOR);
+		TYPE_E (sr, SHR, "%s,%s,%s,'>>,binop", rC, rB, rA);
+		TYPE_E (sri, SHR, "%d,%s,%s,'>>,binop", imm, rB, rA);
+		TYPE_E (srim, SHR, "%d,%s,%s,'m>>,binop", imm, rB, rA);
+		TYPE_E (srm, SHR, "%s,%s,%s,'m>>,binop", rC, rB, rA);
+		TYPE_E (sts, STORE, "%d,%d,%d,%d,%d,1,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
+		TYPE_E (stt, STORE, "%d,%d,%d,%d,%d,3,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
+		TYPE_E (stw, STORE, "%d,%d,%d,%d,%d,2,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
+		TYPE_E (xr, XOR, "%s,%s,%s,'^,binop", rC, rB, rA);
+		TYPE_E (xri, XOR, "%d,%s,%s,'^,binop", imm, rB, rA);
+		TYPE_E (xrm, XOR, "%s,%s,%s,'m^,binop", rC, rB, rA);
 		TYPE (zes, CPL);
 		TYPE (zew, CPL);
 		}
@@ -1073,7 +1303,7 @@ static ut32 vtmp = 0;
 static ut32 idxInputText = 0;
 static char texto[] ="packers_and_vms_and_xors_oh_my\n";
 
-static int esil_clemency_intr (RAnalEsil *esil, int intr) {
+static int esil_clcy_intr (RAnalEsil *esil, int intr) {
 	ut64 valor1;
 	if (!esil)
 		return false;
@@ -1154,31 +1384,36 @@ static int set_reg_profile(RAnal *anal) {
 
 	return r_reg_set_profile_string (anal->reg, p);
 }
-static int esil_clemency_init (RAnalEsil *esil) {
-	if (!esil) return false;
+
+static int esil_clcy_init (RAnalEsil *esil) {
+	r_anal_esil_set_op (esil, "binop", clcy_custom_binop);
+	r_anal_esil_set_op (esil, "carryop", clcy_custom_carryop);
+	r_anal_esil_set_op (esil, "load", clcy_custom_load);
+	r_anal_esil_set_op (esil, "store", clcy_custom_store);
+	r_anal_esil_set_op (esil, "unop", clcy_custom_unop);
 	return true;
 }
 
-static int esil_clemency_fini (RAnalEsil *esil) {
+static int esil_clcy_fini (RAnalEsil *esil) {
 	return true;
 }
 
-static RAnalPlugin r_anal_plugin_clemency = {
+static RAnalPlugin r_anal_plugin_clcy = {
 	.name = "clcy",
 	.desc = "cLEMENCy analysis",
 	.license = "LGPL3",
 	.arch = "clcy",
 	.bits = 27,
-	.esil_init = esil_clemency_init,
-	.esil_fini = esil_clemency_fini,
-	.esil_intr = esil_clemency_intr,
+	.esil_init = esil_clcy_init,
+	.esil_fini = esil_clcy_fini,
+	.esil_intr = esil_clcy_intr,
 	.esil = true,
-	.op = &clemency_op,
+	.op = &clcy_op,
 	.set_reg_profile = set_reg_profile,
 };
 
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_ANAL,
-	.data = &r_anal_plugin_clemency,
+	.data = &r_anal_plugin_clcy,
 	.version = R2_VERSION,
 };

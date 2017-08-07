@@ -18,8 +18,9 @@ SO := anal/anal_clcy.$(LIBEXT) asm/asm_clcy.$(LIBEXT) debug/debug_clcy.$(LIBEXT)
 DEPS := $(SO) asm/d/clcy.sdb syscall/d/linux-clcy-27.sdb
 
 all: $(DEPS)
-	#r2 -a clcy -b 27 ../third_party/clemency/hello.bin
-	r2 -a clcy -b 27 -e asm.addrbytes=2 -e io.cache=1 9bit://../third_party/clemency/hello.bin
+
+run: $(DEPS)
+	r2 -a clcy -b 27 -e asm.addrbytes=2 $(RUNFLAGS) 9bit://../third_party/clemency/hello.bin
 
 %.o: %.c include/*.h
 	$(COMPILE.c) $(R2_CFLAGS) $(R2_LDFLAGS) $< -o $@
@@ -34,7 +35,7 @@ asm/asm_clcy.$(LIBEXT): disasm.o
 	$(SDB) $@ = < $^
 
 clean:
-	rm -f $(DEPS)
+	$(RM) $(DEPS)
 
 $(R2PM_PLUGDIR):
 	mkdir $@
@@ -50,6 +51,6 @@ symstall: $(DEPS) | $(R2PM_PLUGDIR)
 	ln -sfr syscall/d/linux-clcy-27.sdb $(R2PM_SHAREDIR)/syscall/
 
 uninstall:
-	rm -f ${R2PM_PLUGDIR}/*clcy* $(R2PM_SHAREDIR)/opcodes/clcy.sdb $(R2PM_SHAREDIR)/syscall/linux-clcy-27.sdb
+	$(RM) ${R2PM_PLUGDIR}/*clcy* $(R2PM_SHAREDIR)/opcodes/clcy.sdb $(R2PM_SHAREDIR)/syscall/linux-clcy-27.sdb
 
-.PHONY: all clean install symstall uninstall
+.PHONY: all clean install run symstall uninstall

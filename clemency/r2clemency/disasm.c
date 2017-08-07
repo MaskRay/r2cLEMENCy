@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <r_types.h>
 #include "include/clemency.h"
 #include "include/opfield-inc.h"
@@ -165,4 +166,22 @@ void decode_MP(inst_t *inst, const ut16 *src)
   inst->size = 3;
   inst->code = read_27 (src);
 	FORM_MP;
+}
+
+int parse_reg(const char **src) {
+	static const char *specials[] = {"st", "ra", "pc"};
+	char *s = (char *)*src;
+	for (int i = 0; i < 3; i++)
+		if (!strncasecmp (s, specials[i], 2) && !isalnum(s[2])) {
+			*src += 2;
+			return 29 + i;
+		}
+	if (tolower (*s) == 'r') {
+		errno = 0;
+		int r = strtol (s+1, &s, 10);
+		if (errno) return -1;
+		*src = s;
+		return r;
+	}
+	return -1;
 }

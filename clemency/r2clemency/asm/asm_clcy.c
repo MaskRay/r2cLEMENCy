@@ -71,36 +71,18 @@ static int parse_imm_ut(inst_t *inst, const char **src, int bits) {
 	return 0;
 }
 
-static int parse_reg(inst_t *inst, const char **src) {
-	static const char *specials[] = {"st", "ra", "pc"};
-	char *s = (char *)*src;
-	for (int i = 0; i < 3; i++)
-		if (!strncasecmp (s, specials[i], 2) && !isalnum(s[2])) {
-			*src += 2;
-			return 29 + i;
-		}
-	if (tolower (*s) == 'r') {
-		errno = 0;
-		int r = strtol (s+1, &s, 10);
-		if (errno) return -1;
-		*src = s;
-		return r;
-	}
-	return -1;
-}
-
 static int parse_rA(inst_t *inst, const char **src) {
-	inst->rA = parse_reg (inst, src);
+	inst->rA = parse_reg (src);
 	return 0 <= inst->rA < 32 ? 0 : -1;
 }
 
 static int parse_rB(inst_t *inst, const char **src) {
-	inst->rB = parse_reg (inst, src);
+	inst->rB = parse_reg (src);
 	return 0 <= inst->rB < 32 ? 0 : -1;
 }
 
 static int parse_rC(inst_t *inst, const char **src) {
-	inst->rC = parse_reg (inst, src);
+	inst->rC = parse_reg (src);
 	return 0 <= inst->rC < 32 ? 0 : -1;
 }
 
@@ -148,7 +130,7 @@ static int assemble_R_IMM(inst_t *inst, const char **src) {
 	if (parse_rB (inst, src)) return 2;
 	if (parse_comma (inst, src)) return -2;
 	if (parse_imm_st (inst, src, 28)) return 3; // TODO differentiate st/ut e.g. dvi/dvis
-	inst->imm &= 0x7ffffff;
+	inst->imm &= MASK_27;
 	if (parse_end (src)) return 3;
 	inst->size = 3;
 	inst->code = 0 FORM_R_IMM;
@@ -222,8 +204,8 @@ static int assemble_B_CC_OFF(inst_t *inst, const char **src) {
 	int bit_size = 27;
 	if (parse_cc (inst, src)) return 1;
 	if (parse_space (inst, src)) return 1;
-	if (parse_imm_ut (inst, src, 27)) return 1;
-	inst->imm = inst->imm - inst->pc & 0x7ffffff;
+	if (parse_imm_ut (inst, src, 17)) return 1;
+	inst->imm = inst->imm - inst->pc & (1 << 17) - 1;
 	if (parse_end (src)) return 1;
 	inst->size = 3;
 	inst->code = 0 FORM_B_CC_OFF;
@@ -245,7 +227,7 @@ static int assemble_B_OFF(inst_t *inst, const char **src) {
 	int bit_size = 36;
 	if (parse_space (inst, src)) return 1;
 	if (parse_imm_ut (inst, src, 27)) return 1;
-	inst->imm = inst->imm - inst->pc & 0x7ffffff;
+	inst->imm = inst->imm - inst->pc & MASK_27;
 	if (parse_end (src)) return 1;
 	inst->size = 4;
 	inst->code = 0 FORM_B_OFF;
@@ -320,7 +302,7 @@ static int assemble_M(inst_t *inst, const char **src) {
 	if (parse_char (inst, src, '[')) return 1;
 	if (parse_rB (inst, src)) return 2;
 	if (parse_imm_st (inst, src, 27)) return 3;
-	inst->imm &= 0x7ffffff;
+	inst->imm &= MASK_27;
 	if (parse_comma (inst, src)) return -3;
 	char *s = (char *)*src;
 	errno = 0;
