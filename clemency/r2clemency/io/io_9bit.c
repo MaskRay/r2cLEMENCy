@@ -120,6 +120,7 @@ static RIODesc *__open(RIO *io, const char *filename, int flags, int mode) {
 	munmap (buf, len);
  err_lseek:
 	r_sandbox_close (fd);
+	return NULL;
 }
 
 static int __read(RIO *io, RIODesc *fd, ut8 *buf, int count) {

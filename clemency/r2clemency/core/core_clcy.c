@@ -10,15 +10,17 @@
 
 #include "../include/clemency.h"
 
-static void clemency_help(RCore *core) {
-	eprintf ("Clemency command:\n");
+static void clcy_help(RCore *core) {
+	eprintf ("cLEMENCy command:\n");
 	eprintf ("_x        9bit hexdump\n");
 	eprintf ("_xw       18bit hexdump\n");
 	eprintf ("_xt       27bit hexdump\n");
 }
 
 static void hexdump_9byte(RCore *core, const char *arg, int len) {
-	// TODO > blocksize
+	ut32 tbs = core->blocksize;
+	if (len != tbs && !r_core_block_size (core, len))
+		return;
 	ut16 *buf = malloc (len);
 	r_io_read_at (core->io, core->offset, (ut8 *)buf, len);
 	for (int i = 0; (i + 1) * 2 <= len; i++) {
@@ -30,10 +32,14 @@ static void hexdump_9byte(RCore *core, const char *arg, int len) {
 	}
 	r_cons_newline ();
 	free (buf);
+	if (len != tbs)
+		r_core_block_size (core, tbs);
 }
 
 static void hexdump_18word(RCore *core, const char *arg, int len) {
-	// TODO > blocksize
+	ut32 tbs = core->blocksize;
+	if (len != tbs && !r_core_block_size (core, len))
+		return;
 	ut16 *buf = malloc (len);
 	r_io_read_at (core->io, core->offset, (ut8 *)buf, len);
 	for (int i = 0; (i + 1) * 4 <= len; i++) {
@@ -41,14 +47,18 @@ static void hexdump_18word(RCore *core, const char *arg, int len) {
 			if (i) r_cons_newline ();
 			r_cons_printf ("0x%08"PFMT64x":", core->offset + i * 2);
 		}
-		r_cons_printf (" %05x", buf[i*2] << 9 | buf[i*2+1]);
+		r_cons_printf (" %05x", buf[i*2+1] << 9 | buf[i*2]);
 	}
 	r_cons_newline ();
 	free (buf);
+	if (len != tbs)
+		r_core_block_size (core, tbs);
 }
 
 static void hexdump_27tri(RCore *core, const char *arg, int len) {
-	// TODO > blocksize
+	ut32 tbs = core->blocksize;
+	if (len != tbs && !r_core_block_size (core, len))
+		return;
 	ut16 *buf = malloc (len);
 	r_io_read_at (core->io, core->offset, (ut8 *)buf, len);
 	for (int i = 0; (i + 1) * 6 <= len; i++) {
@@ -56,20 +66,22 @@ static void hexdump_27tri(RCore *core, const char *arg, int len) {
 			if (i) r_cons_newline ();
 			r_cons_printf ("0x%08"PFMT64x":", core->offset + i * 3);
 		}
-		r_cons_printf (" %07x", buf[i*2+2] << 18 | buf[i*2] << 9 | buf[i*2+1]);
+		r_cons_printf (" %07x", buf[i*3+1] << 18 | buf[i*3] << 9 | buf[i*3+2]);
 	}
 	r_cons_newline ();
 	free (buf);
+	if (len != tbs)
+		r_core_block_size (core, tbs);
 }
 
-static int r_cmd_clemency(struct r_core_t *core, const char *input) {
+static int r_cmd_clcy(struct r_core_t *core, const char *input) {
 	if (input[0] == '_') {
 		switch (input[1]) {
 		case 'x': // "_x"
 			switch (input[2]) {
 			case '\0':
 			case ' ':
-				r_core_cmdf (core, "_p %s", input[2] ? input + 3 : "");
+				r_core_cmdf (core, "_p %s", input[1] ? input + 2 : "");
 				break;
 			case 't':
 				r_core_cmdf (core, "_pt %s", input[2] ? input + 3 : "");
@@ -78,7 +90,7 @@ static int r_cmd_clemency(struct r_core_t *core, const char *input) {
 				r_core_cmdf (core, "_pw %s", input[2] ? input + 3 : "");
 				break;
 			default:
-				clemency_help (core);
+				clcy_help (core);
 				break;
 			}
 			break;
@@ -105,15 +117,12 @@ static int r_cmd_clemency(struct r_core_t *core, const char *input) {
 				break;
 			}
 			default:
-				clemency_help (core);
+				clcy_help (core);
 				break;
 			}
 			break;
-		case 'w': // "_w"
-			eprintf ("Bit level writes using 9 bit bytes because FUCK YOU\n");
-			break;
 		default:
-			clemency_help (core);
+			clcy_help (core);
 			break;
 		}
 		return true;
@@ -121,15 +130,15 @@ static int r_cmd_clemency(struct r_core_t *core, const char *input) {
 	return false;
 }
 
-RCorePlugin r_core_plugin_clemency = {
+RCorePlugin r_core_plugin_clcy = {
 	.name = "clcy",
 	.desc = "cLEMENCy core",
 	.license = "LGPL3",
-	.call = (void*)r_cmd_clemency,
+	.call = (void*)r_cmd_clcy,
 };
 
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_CORE,
-	.data = &r_core_plugin_clemency,
+	.data = &r_core_plugin_clcy,
 	.version = R2_VERSION
 };

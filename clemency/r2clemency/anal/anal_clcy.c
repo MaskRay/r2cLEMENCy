@@ -13,11 +13,11 @@
 #define CC_SWITCH(...)													\
 	switch (inst.cc) { \
 	case CC_n: r_strbuf_setf (&op->esil, "zf,!" __VA_ARGS__); break; \
-	case CC_e: r_strbuf_setf (&op->esil, "zf" __VA_ARGS__); break; \
-	case CC_l: r_strbuf_setf (&op->esil, "zf" __VA_ARGS__); break; \
-	case CC_le: r_strbuf_setf (&op->esil, "zf,cf,|" __VA_ARGS__); break; \
+	case CC_e: r_strbuf_setf (&op->esil, "zf" __VA_ARGS__); break;				\
+	case CC_l:  /* I think zf is redundant */ r_strbuf_setf (&op->esil, "cf" __VA_ARGS__); break; \
+	case CC_le: r_strbuf_setf (&op->esil, "zf,cf,|" __VA_ARGS__); break;	\
 	case CC_g: r_strbuf_setf (&op->esil, "zf,cf,|,!" __VA_ARGS__); break; \
-	case CC_ge: /* I think zf is redundant */ r_strbuf_setf (&op->esil, "zf,cf,!,|" __VA_ARGS__); break; \
+	case CC_ge: /* I think zf is redundant */ r_strbuf_setf (&op->esil, "cf,!" __VA_ARGS__); break; \
 	case CC_no: r_strbuf_setf (&op->esil, "of,!" __VA_ARGS__); break; \
 	case CC_o: r_strbuf_setf (&op->esil, "of" __VA_ARGS__); break; \
 	case CC_ns: r_strbuf_setf (&op->esil, "sf,!" __VA_ARGS__); break; \
@@ -556,9 +556,7 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 	return op->size;
 }
 
-static void *  internalMemory = NULL;
 static int indicememoria = 0;
-static ut32 vtmp = 0;
 static ut32 idxInputText = 0;
 static char texto[] ="packers_and_vms_and_xors_oh_my\n";
 

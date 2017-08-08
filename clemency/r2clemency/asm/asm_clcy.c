@@ -1,5 +1,4 @@
-/* radare - LGPL - Copyright 2017 - xvilka */
-
+/* radare - LGPL - Copyright 2017 - xvilka, MaskRay */
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,12 +22,11 @@ static const char *mnemonics[] = {
 #undef INS_4
 };
 
-
 static int parse_cc(inst_t *inst, const char **src) {
 	for (int i = 0; i < R_ARRAY_SIZE (conditions); i++)
 		if (conditions[i]) {
 			int l = strlen (conditions[i]);
-			if (!strncasecmp (*src, conditions[i], l) && !isalnum((*src)[l])) {
+			if (!strncasecmp (*src, conditions[i], l) && !isalnum ((*src)[l])) {
 				*src += l;
 				inst->cc = i;
 				return 0;
@@ -57,7 +55,7 @@ static int parse_imm_st(inst_t *inst, const char **src, int bits) {
 	char *s = (char *)*src;
 	errno = 0;
 	inst->imm = strtol (s, &s, 0);
-	if (errno || !(-1 << bits-1 <= inst->imm && inst->imm < 1 << bits-1)) return -1;
+	if (errno || s == *src || !(-1 << bits-1 <= inst->imm && inst->imm < 1 << bits-1)) return -1;
 	*src = s;
 	return 0;
 }
@@ -66,7 +64,7 @@ static int parse_imm_ut(inst_t *inst, const char **src, int bits) {
 	char *s = (char *)*src;
 	errno = 0;
 	inst->imm = strtol (s, &s, 0);
-	if (errno || !(0 <= inst->imm && inst->imm < 1 << bits)) return -1;
+	if (errno || s == *src || !(0 <= inst->imm && inst->imm < 1 << bits)) return -1;
 	*src = s;
 	return 0;
 }
@@ -349,6 +347,8 @@ static int assemble_MP(inst_t *inst, const char **src) {
 	return 0;
 }
 
+#undef FIELD
+
 static void pprint_R(RAsmOp *op, const inst_t *inst) {
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s, %s, %s", mnemonics[inst->id], inst->uf ? "." : "", regs[inst->rA], regs[inst->rB], regs[inst->rC]);
 }
@@ -408,10 +408,7 @@ static void pprint_U_EXTEND(RAsmOp *op, const inst_t *inst) {
 }
 
 static void pprint_RANDOM(RAsmOp *op, const inst_t *inst) {
-	if (!conditions[inst->cc])
-		strcpy (op->buf_asm, mnemonics[I_invalid]);
-	else
-		snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s", mnemonics[inst->id], conditions[inst->cc], regs[inst->rA]);
+	snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s %s", mnemonics[inst->id], inst->uf ? "." : "", regs[inst->rA]);
 }
 
 static void pprint_M(RAsmOp *op, const inst_t *inst) {
@@ -429,13 +426,6 @@ static void pprint_M(RAsmOp *op, const inst_t *inst) {
 static void pprint_MP(RAsmOp *op, const inst_t *inst) {
 	static const char *protections[] = {"", "R", "RW", "RE"};
 	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s, %s, %s", mnemonics[inst->id], regs[inst->rA], regs[inst->rB], protections[inst->mem_flags]);
-}
-
-static const char *get_reg_name(int reg_index) {
-	if (reg_index < sizeof(regs)) {
-		return regs[reg_index];
-	}
-	return NULL;
 }
 
 static int assemble(RAsm *a, RAsmOp *op, const char *src) {
@@ -465,12 +455,12 @@ static int assemble(RAsm *a, RAsmOp *op, const char *src) {
 		}
 	}
 	if (!mnemlen) {
-		while (buf[mnemlen] && buf[mnemlen] != '.' && !isspace(buf[mnemlen])) {
+		while (buf[mnemlen] && buf[mnemlen] != '.' && !isspace (buf[mnemlen])) {
 			mnemlen++;
 		}
 	}
 
-	int (*assem)(inst_t *inst, const char **src) = NULL;
+	int (*assem)(inst_t *inst, const char **src);
 	inst_t inst;
 	char saved = buf[mnemlen];
 	buf[mnemlen] = '\0';
@@ -495,9 +485,11 @@ static int assemble(RAsm *a, RAsmOp *op, const char *src) {
 
 	if (assem (&inst, &src)) return -1;
 	for (int i = 0; i < inst.size; i++) {
-		op->buf[i * 2] = inst.code >> (inst.size-1-i)*9 & 255;
-		op->buf[i * 2 + 1] = (inst.code >> (inst.size-1-i)*9 & 511) >> 8;
+		ut64 t = inst.code >> (inst.size-1-i)*9;
+		op->buf[i * 2] = t & 255;
+		op->buf[i * 2 + 1] = t >> 8;
 	}
+	// middle-endian swap
 	for (int i = 0; i + 1 < inst.size; i += 3) {
 		char t0 = op->buf[i * 2], t1 = op->buf[i * 2 + 1];
 		op->buf[i * 2] = op->buf[i * 2 + 2];
@@ -530,11 +522,11 @@ static int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {
 	return op->size = 1;
 }
 
-static RAsmPlugin r_asm_plugin_clemency  = {
+static RAsmPlugin r_asm_plugin_clcy  = {
 	.name = "clcy",
 	.arch = "clcy",
 	.license = "LGPL3",
-	.bits = 64,
+	.bits = 64, // in accordance with r_anal_plugin_clcy
 	.desc = "cLEMENCy disassembler and assembler",
 	.disassemble = &disassemble,
 	.assemble = &assemble,
@@ -542,6 +534,6 @@ static RAsmPlugin r_asm_plugin_clemency  = {
 
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_ASM,
-	.data = &r_asm_plugin_clemency,
+	.data = &r_asm_plugin_clcy,
 	.version = R2_VERSION,
 };
