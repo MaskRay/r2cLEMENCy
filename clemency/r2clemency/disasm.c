@@ -36,12 +36,13 @@ static ut64 read_54(const ut16 *src) {
 }
 
 #define DEFINE_DECODE(type, bits) \
-  void decode_##type(inst_t *inst, const ut16 *src) \
+  bool decode_##type(inst_t *inst, const ut16 *src, int len) \
   { \
     int bit_size = bits; \
-    inst->size = bits / 9; \
+    if ((inst->size = bits / 9) > len) return false; \
     inst->code = read_##bits (src); \
 		FORM_##type; \
+		return true; \
   }
 
 DEFINE_DECODE (R, 27)
@@ -60,41 +61,45 @@ DEFINE_DECODE (MP, 27)
 
 #undef DEFINE_DECODE
 
-void decode_MOV_LOW_SIGNED(inst_t *inst, const ut16 *src)
+bool decode_MOV_LOW_SIGNED(inst_t *inst, const ut16 *src, int len)
 {
   int bit_size = 27;
-  inst->size = 3;
+  if ((inst->size = 3) > len) return false;
   inst->code = read_27 (src);
 	FORM_MOV_LOW_SIGNED;
   SIGN_EXTEND(imm, 17);
+	return true;
 }
 
-void decode_B_CC_OFF(inst_t *inst, const ut16 *src)
+bool decode_B_CC_OFF(inst_t *inst, const ut16 *src, int len)
 {
   int bit_size = 27;
-  inst->size = 3;
+  if ((inst->size = 3) > len) return false;
   inst->code = read_27 (src);
 	FORM_B_CC_OFF;
   SIGN_EXTEND (imm, 17);
+	return true;
 }
 
-void decode_B_OFF(inst_t *inst, const ut16 *src)
+bool decode_B_OFF(inst_t *inst, const ut16 *src, int len)
 {
   int bit_size = 36;
-  inst->size = 4;
+  if ((inst->size = 4) > len) return false;
   inst->code = read_36 (src);
 	FORM_B_OFF;
   SIGN_EXTEND (imm, 27);
+	return true;
 }
 
-void decode_M(inst_t *inst, const ut16 *src)
+bool decode_M(inst_t *inst, const ut16 *src, int len)
 {
   int bit_size = 54;
-  inst->size = 6;
+  if ((inst->size = 6) > len) return false;
   inst->code = read_54 (src);
 	FORM_M;
   SIGN_EXTEND (imm, 27);
   inst->reg_count++;
+	return true;
 }
 
 int parse_reg(const char **src) {

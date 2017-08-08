@@ -6,6 +6,7 @@
 #define MASK_54 0x3fffffffffffffull
 #define BIT_26 (1L << 26)
 #define BIT_53 (1L << 53)
+#define PGSIZE 1024
 
 enum {
   I_invalid = 0,

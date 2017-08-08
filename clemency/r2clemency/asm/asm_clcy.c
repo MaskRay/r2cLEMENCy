@@ -299,8 +299,12 @@ static int assemble_M(inst_t *inst, const char **src) {
 	if (parse_comma (inst, src)) return 1;
 	if (parse_char (inst, src, '[')) return 1;
 	if (parse_rB (inst, src)) return 2;
-	if (parse_imm_st (inst, src, 27)) return 3;
-	inst->imm &= MASK_27;
+	if (**src == ',')
+		inst->imm = 0;
+	else {
+		if (parse_imm_st (inst, src, 27)) return 3;
+		inst->imm &= MASK_27;
+	}
 	if (parse_comma (inst, src)) return -3;
 	char *s = (char *)*src;
 	errno = 0;
@@ -371,13 +375,16 @@ static void pprint_BIN_R_IMM(RAsmOp *op, const inst_t *inst) {
 
 #define pprint_MOV_LOW_HI pprint_BIN_R_IMM
 
-#define pprint_MOV_LOW_SIGNED pprint_BIN_R_IMM
+static void pprint_MOV_LOW_SIGNED(RAsmOp *op, const inst_t *inst) {
+	// clemency-emu displays this as 17-bit
+	snprintf (op->buf_asm, sizeof op->buf_asm, "%s %s, 0x%" PRIx32, mnemonics[inst->id], regs[inst->rA], inst->imm & MASK_27);
+}
 
 static void pprint_B_CC_OFF(RAsmOp *op, const inst_t *inst) {
 	if (!conditions[inst->cc])
 		strcpy (op->buf_asm, mnemonics[I_invalid]);
 	else
-		snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s 0x%" PRIx32, mnemonics[inst->id], conditions[inst->cc], inst->pc + inst->imm);
+		snprintf (op->buf_asm, sizeof op->buf_asm, "%s%s 0x%" PRIx32, mnemonics[inst->id], conditions[inst->cc], inst->pc + inst->imm & MASK_27);
 }
 
 static void pprint_B_CC_R(RAsmOp *op, const inst_t *inst) {
@@ -388,7 +395,7 @@ static void pprint_B_CC_R(RAsmOp *op, const inst_t *inst) {
 }
 
 static void pprint_B_OFF(RAsmOp *op, const inst_t *inst) {
-	snprintf (op->buf_asm, sizeof op->buf_asm, "%s 0x%" PRIx32, mnemonics[inst->id], inst->pc + inst->imm);
+	snprintf (op->buf_asm, sizeof op->buf_asm, "%s 0x%" PRIx32, mnemonics[inst->id], inst->pc + inst->imm & MASK_27);
 }
 
 static void pprint_B_LOC(RAsmOp *op, const inst_t *inst) {
@@ -487,7 +494,7 @@ static int assemble(RAsm *a, RAsmOp *op, const char *src) {
 	for (int i = 0; i < inst.size; i++) {
 		ut64 t = inst.code >> (inst.size-1-i)*9;
 		op->buf[i * 2] = t & 255;
-		op->buf[i * 2 + 1] = t >> 8;
+		op->buf[i * 2 + 1] = t >> 8 & 1;
 	}
 	// middle-endian swap
 	for (int i = 0; i + 1 < inst.size; i += 3) {
@@ -503,13 +510,14 @@ static int assemble(RAsm *a, RAsmOp *op, const char *src) {
 static int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {
 	inst_t inst = {.pc = a->pc};
 	void (*pprint)(RAsmOp *op, const inst_t *inst);
+	bool ok;
 
-#define FORMAT(fmt) decode_##fmt (&inst, (const ut16*)src); pprint = pprint_##fmt;
-#define INS(x,opc) do { if (inst.opcode == opc) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
-#define INS_1(x,opc,f1,v1) do { if (inst.opcode == opc && inst.f1 == v1) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
-#define INS_2(x,opc,f1,v1,f2,v2) do { if (inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
-#define INS_3(x,opc,f1,v1,f2,v2,f3,v3) do { if (inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2 && inst.f3 == v3) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
-#define INS_4(x,opc,f1,v1,f2,v2,f3,v3,f4,v4) do { if (inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2 && inst.f3 == v3 && inst.f4 == v4) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
+#define FORMAT(fmt) ok = decode_##fmt (&inst, (const ut16*)src, len/2); pprint = pprint_##fmt;
+#define INS(x,opc) do { if (ok && inst.opcode == opc) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
+#define INS_1(x,opc,f1,v1) do { if (ok && inst.opcode == opc && inst.f1 == v1) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
+#define INS_2(x,opc,f1,v1,f2,v2) do { if (ok && inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
+#define INS_3(x,opc,f1,v1,f2,v2,f3,v3) do { if (ok && inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2 && inst.f3 == v3) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
+#define INS_4(x,opc,f1,v1,f2,v2,f3,v3,f4,v4) do { if (ok && inst.opcode == opc && inst.f1 == v1 && inst.f2 == v2 && inst.f3 == v3 && inst.f4 == v4) { inst.id = I_##x; pprint (op, &inst); return op->size = inst.size; } } while (0);
 #include "../include/opcode-inc.h"
 #undef FORMAT
 #undef INS
