@@ -1,0 +1,14 @@
+default.cc=clcy
+
+clcy=cc
+cc.clcy.name=clcy
+cc.clcy.arg1=r0
+cc.clcy.arg2=r1
+cc.clcy.arg3=r2
+cc.clcy.arg4=r3
+cc.clcy.arg5=r4
+cc.clcy.arg6=r5
+cc.clcy.arg7=r6
+cc.clcy.arg8=r7
+cc.clcy.arg9=r8
+cc.clcy.ret=r0

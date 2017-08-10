@@ -125,6 +125,8 @@ static int clcy_custom_store(RAnalEsil *esil) {
 	return 1;
 }
 
+static RAnalOp *_op;
+
 static int clcy_custom_binop(RAnalEsil *esil) {
 	bool carry = false, uf = false, mf;
 	ut64 a, b, c, msb;
@@ -158,11 +160,23 @@ static int clcy_custom_binop(RAnalEsil *esil) {
 	case '+':
 		a = b + c;
 		if (carry && read_fl (esil) & 2) a++;
+		if (iA == REG_ST) {
+			if (iA == iB && immC) {
+				_op->stackop = R_ANAL_STACK_INC;
+				_op->stackptr = -c;
+			}
+		}
 		break;
 	case '-':
 		a = b - c;
 		if (carry && read_fl (esil) & 2) a--;
 		f = '-';
+		if (iA == REG_ST) {
+			if (iA == iB && immC) {
+				_op->stackop = R_ANAL_STACK_INC;
+				_op->stackptr = c;
+			}
+		}
 		break;
 	case '*':
 		f = '*';
@@ -389,6 +403,7 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 	op->jump = op->fail = -1;
 	op->ptr = op->val = -1;
 	op->addr = addr;
+	_op = op;
 
 	if (found) {
 		op->size = inst.size;
@@ -444,20 +459,36 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 			CC_SWITCH (",?{,pc,ra,=,%s,pc,=,}", op->reg);
 			break;
 		case I_lds:
-			op->type = R_ANAL_OP_TYPE_LOAD;
-			op->refptr = 1;
-			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,1,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
-			break;
 		case I_ldt:
+		case I_ldw: {
+			int t = inst.id == I_lds ? 1 : inst.id == I_ldw ? 2 : 3;
 			op->type = R_ANAL_OP_TYPE_LOAD;
-			op->refptr = 3;
-			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,3,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
+			op->refptr = t;
+			if (inst.rB == REG_ST && inst.adj_rb) {
+				op->stackop = R_ANAL_STACK_INC;
+				if (inst.adj_rb == 1)
+					op->stackptr = -inst.reg_count * t;
+				else if (inst.adj_rb == 2)
+					op->stackptr = inst.reg_count * t;
+			}
+			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,%d,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb, t);
 			break;
-		case I_ldw:
-			op->type = R_ANAL_OP_TYPE_LOAD;
-			op->refptr = 2;
-			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,2,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
+		}
+		case I_sts:
+		case I_stt:
+		case I_stw: {
+			int t = inst.id == I_sts ? 1 : inst.id == I_stw ? 2 : 3;
+			op->type = R_ANAL_OP_TYPE_STORE;
+			if (inst.rB == REG_ST && inst.adj_rb) {
+				op->stackop = R_ANAL_STACK_INC;
+				if (inst.adj_rb == 1)
+					op->stackptr = -inst.reg_count * t;
+				else if (inst.adj_rb == 2)
+					op->stackptr = inst.reg_count * t;
+			}
+			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,%d,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb, t);
 			break;
+		}
 		TYPE_E (ad, ADD, "%s,%s,%s,'%s+,binop", rC, rB, rA, if_uf);
 		TYPE_E (adc, ADD, "%s,%s,%s,'%sc+,binop", rC, rB, rA, if_uf);
 		TYPE_E (adci, ADD, "%d,%s,%s,'%sc+,binop", imm, rB, rA, if_uf);
@@ -570,9 +601,6 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 		TYPE_E (sri, SHR, "%d,%s,%s,'%s>>,binop", imm, rB, rA, if_uf);
 		TYPE_E (srim, SHR, "%d,%s,%s,'%sm>>,binop", imm, rB, rA, if_uf);
 		TYPE_E (srm, SHR, "%s,%s,%s,'%sm>>,binop", rC, rB, rA, if_uf);
-		TYPE_E (sts, STORE, "%d,%d,%d,%d,%d,1,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
-		TYPE_E (stt, STORE, "%d,%d,%d,%d,%d,3,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
-		TYPE_E (stw, STORE, "%d,%d,%d,%d,%d,2,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb);
 		TYPE_E (xr, XOR, "%s,%s,%s,'%s^,binop", rC, rB, rA, if_uf);
 		TYPE_E (xri, XOR, "%d,%s,%s,'%s^,binop", imm, rB, rA, if_uf);
 		TYPE_E (xrm, XOR, "%s,%s,%s,'%sm^,binop", rC, rB, rA, if_uf);

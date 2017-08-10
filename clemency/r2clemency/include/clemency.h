@@ -7,6 +7,7 @@
 #define BIT_26 (1L << 26)
 #define BIT_53 (1L << 53)
 #define PGSIZE 1024
+#define REG_ST 29
 
 enum {
   I_invalid = 0,

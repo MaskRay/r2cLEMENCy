@@ -15,7 +15,7 @@ R2PM_SHAREDIR = $(dir $(shell r2 -H MAGICPATH))
 SO := anal/anal_clcy.$(LIBEXT) asm/asm_clcy.$(LIBEXT) debug/debug_clcy.$(LIBEXT) \
 	core/core_clcy.$(LIBEXT) io/io_clcy.$(LIBEXT) io/io_9bit.$(LIBEXT)
 
-DEPS := $(SO) asm/d/clcy.sdb syscall/d/linux-clcy-64.sdb
+DEPS := $(SO) anal/d/cc-clcy-64.sdb asm/d/clcy.sdb syscall/d/linux-clcy-64.sdb
 
 all: $(DEPS)
 
@@ -49,8 +49,9 @@ symstall: $(DEPS) | $(R2PM_PLUGDIR)
 	ln -sfr $(SO) $(R2PM_PLUGDIR)/
 	ln -sfr asm/d/clcy.sdb  $(R2PM_SHAREDIR)/opcodes/
 	ln -sfr syscall/d/linux-clcy-64.sdb $(R2PM_SHAREDIR)/syscall/
+	ln -sfr anal/d/cc-clcy-64.sdb $(R2PM_SHAREDIR)/fcnsign/
 
 uninstall:
-	$(RM) ${R2PM_PLUGDIR}/*clcy* $(R2PM_SHAREDIR)/opcodes/clcy.sdb $(R2PM_SHAREDIR)/syscall/linux-clcy-64.sdb
+	$(RM) ${R2PM_PLUGDIR}/*clcy* $(R2PM_SHAREDIR)/fcnsign/cc-clcy-64.sdb $(R2PM_SHAREDIR)/opcodes/clcy.sdb $(R2PM_SHAREDIR)/syscall/linux-clcy-64.sdb
 
 .PHONY: all clean install run symstall uninstall
