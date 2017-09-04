@@ -13,7 +13,7 @@ R2PM_PLUGDIR := $(shell r2 -H RHOMEDIR)/plugins
 R2PM_SHAREDIR = $(dir $(shell r2 -H MAGICPATH))
 
 SO := anal/anal_clcy.$(LIBEXT) asm/asm_clcy.$(LIBEXT) debug/debug_clcy.$(LIBEXT) \
-	core/core_clcy.$(LIBEXT) io/io_clcy.$(LIBEXT) io/io_9bit.$(LIBEXT)
+	core/core_clcy.$(LIBEXT) io/io_9bit.$(LIBEXT)
 
 DEPS := $(SO) anal/d/cc-clcy-64.sdb asm/d/clcy.sdb syscall/d/linux-clcy-64.sdb
 
