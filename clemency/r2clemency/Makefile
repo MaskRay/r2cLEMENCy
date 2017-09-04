@@ -52,6 +52,6 @@ symstall: $(DEPS) | $(R2PM_PLUGDIR)
 	ln -sfr anal/d/cc-clcy-64.sdb $(R2PM_SHAREDIR)/fcnsign/
 
 uninstall:
-	$(RM) ${R2PM_PLUGDIR}/*clcy* $(R2PM_SHAREDIR)/fcnsign/cc-clcy-64.sdb $(R2PM_SHAREDIR)/opcodes/clcy.sdb $(R2PM_SHAREDIR)/syscall/linux-clcy-64.sdb
+	$(RM) $(foreach i,$(SO),${R2PM_PLUGDIR}/$(notdir $i)) $(R2PM_SHAREDIR)/fcnsign/cc-clcy-64.sdb $(R2PM_SHAREDIR)/opcodes/clcy.sdb $(R2PM_SHAREDIR)/syscall/linux-clcy-64.sdb
 
 .PHONY: all clean install run symstall uninstall
