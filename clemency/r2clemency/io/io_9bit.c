@@ -139,7 +139,7 @@ static RIODesc *_open(RIO *io, const char *filename, int flags, int mode) {
 			x &= (1L << l) - 1;
 		}
 	}
-	r_config_set_i (((RCore *)io->user)->config, "asm.addrbytes", 2);
+	io->addrbytes = 2;
 	return r_io_desc_new (io, &r_io_plugin_9bit, mmo->filename, flags, mode, mmo);
 
  out_mmo:
