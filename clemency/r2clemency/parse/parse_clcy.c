@@ -12,8 +12,14 @@
 static int _parse(RParse *p, const char *src, char *dst) {
 	RCore *core = p->user;
 	RAsmOp op;
-	diassemble (core->assembler, &op, src, strlen (src));
-	strcpy (src, dst);
+	int len;
+	// `assemble` could be saved if we had access to metadata of previous call to `assemble`
+	if ((len = assemble (core->assembler->pc, &op, src)) > 0 &&
+			disassemble (core->assembler->pc, &op, op.buf, len, true) > 0) {
+		strcpy (dst, op.buf_asm);
+	} else {
+		strcpy (dst, src);
+	}
 	return true;
 }
 

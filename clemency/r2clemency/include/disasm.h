@@ -21,4 +21,5 @@ bool decode_M(inst_t *inst, const ut16 *src, int len);
 bool decode_MP(inst_t *inst, const ut16 *src, int len);
 
 int parse_reg(const char **src);
-int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len);
+int assemble(ut64 pc, RAsmOp *op, const char *src);
+int disassemble(ut64 pc, RAsmOp *op, const ut8 *src, int len, bool pseudo);
