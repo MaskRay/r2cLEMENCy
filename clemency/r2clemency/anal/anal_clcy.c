@@ -282,10 +282,12 @@ static int clcy_custom_compare(RAnalEsil *esil) {
 static int clcy_custom_dmt(RAnalEsil *esil) {
 	int iA = esil_pop_int (esil), iB = esil_pop_int (esil), iC = esil_pop_int (esil),
 		a = read_reg (esil, iA), b = read_reg (esil, iB), c = read_reg (esil, iC), len;
-	ut8 *buf = malloc (c * 2);
-	if (!buf) return 0;
-	len = r_anal_esil_mem_read (esil, b, buf, c * 2);
-	r_anal_esil_mem_write (esil, a, buf, len);
+	if (0 < c && c <= 16) {
+		ut8 *buf = malloc (c * 2);
+		if (!buf) return 0;
+		len = r_anal_esil_mem_read (esil, b, buf, c * 2);
+		r_anal_esil_mem_write (esil, a, buf, len);
+	}
 	return 1;
 }
 

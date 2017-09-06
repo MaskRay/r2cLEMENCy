@@ -399,18 +399,10 @@ static RList *_patch_relocs(RBin *b) {
 			x &= (1L << l) - 1;
 		}
 	}
-	SdbListIter *iter;
-	RIOMap *map;
-	ls_foreach_prev (b->iob.io->maps, iter, map) {
-		if (map->from == NFO_VADDR) {
-			RIODesc *desc = r_io_desc_get (b->iob.io, map->fd);
-			desc->flags |= R_IO_WRITE;
-			map->flags |= R_IO_WRITE;
-			(void)r_io_write_at (b->iob.io, NFO_VADDR, (const ut8 *)buf, len * 2);
-			map->flags &= ~R_IO_WRITE;
-			desc->flags &= ~R_IO_WRITE;
-		}
-	}
+
+	RIOSection sec = {.size = n_buf * 2, .vsize = 0x4000, .flags = R_IO_READ};
+	(void)r_io_create_mem_map (b->iob.io, &sec, NFO_VADDR, false);
+	(void)r_io_write_at (b->iob.io, NFO_VADDR, (const ut8 *)buf, len * 2);
 	free (buf);
 	return NULL;
 }
@@ -429,7 +421,7 @@ static RList *_sections(RBinFile *arch) {
 		{"Data Received Size", 0x5002000, 0x2, 6},
 		{"Data Sent", 0x5010000, 0x2000, 6},
 		{"Data Sent Size", 0x5012000, 0x2, 6},
-		{"NFO", NFO_VADDR, 0x4000, 5}, // hidden section, clemency_nfo.c
+		//{"NFO", NFO_VADDR, 0x4000, 5}, // hidden section from clemency_nfo.c, created in _patch_relocs
 		//{"Shared Memory", 0x6000000, 0x800000, 6},
 		//{"NVRAM Memory", 0x6800000, 0x800000, 6},
 		{"Interrupt Pointers", 0x7ffff00, 0x1c, 6},

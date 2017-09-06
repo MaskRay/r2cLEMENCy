@@ -74,7 +74,8 @@ static void hexdump_27tri(RCore *core, const char *arg, int len) {
 		r_core_block_size (core, tbs);
 }
 
-static int r_cmd_clcy(struct r_core_t *core, const char *input) {
+static int r_cmd_clcy(void *user, const char *input) {
+	RCore *core = (RCore *)user;
 	if (input[0] == '_') {
 		switch (input[1]) {
 		case 'x': // "_x"
@@ -134,7 +135,7 @@ RCorePlugin r_core_plugin_clcy = {
 	.name = "clcy",
 	.desc = "cLEMENCy core",
 	.license = "LGPL3",
-	.call = (void*)r_cmd_clcy,
+	.call = r_cmd_clcy,
 };
 
 RLibStruct radare_plugin = {
