@@ -473,7 +473,11 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 				else if (inst.adj_rb == 2)
 					op->stackptr = inst.reg_count * t;
 			}
-			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,%d,load", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb, t);
+			// anal/fcn.c:r_anal_fcn_fill_args uses "0x..,st,+" like patterns to detect access of local variable/argument
+			// The first 4 commands are used to cheat r_anal_fcn_fill_args
+			r_strbuf_setf (&op->esil, "%#x,%s,%c,POP,  %d,%d,%d,%d,%d,%d,load",
+										 abs (imm), rB, imm < 0 ? '-' : '+',
+										 inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb, t);
 			break;
 		}
 		case I_sts:
@@ -488,7 +492,10 @@ static int clcy_op(RAnal *anal, RAnalOp *op, ut64 addr, const ut8 *src, int len)
 				else if (inst.adj_rb == 2)
 					op->stackptr = inst.reg_count * t;
 			}
-			r_strbuf_setf (&op->esil, "%d,%d,%d,%d,%d,%d,store", inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb, t);
+			// See the comment above for case I_ldw:
+			r_strbuf_setf (&op->esil, "%#x,%s,%c,POP,  %d,%d,%d,%d,%d,%d,store",
+										 abs (imm), rB, imm < 0 ? '-' : '+',
+										 inst.reg_count, imm, inst.rB, inst.rA, inst.adj_rb, t);
 			break;
 		}
 		TYPE_E (ad, ADD, "%s,%s,%s,'%s+,binop", rC, rB, rA, if_uf);
