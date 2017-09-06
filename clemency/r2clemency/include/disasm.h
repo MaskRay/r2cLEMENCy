@@ -1,4 +1,7 @@
 #pragma once
+#include <r_asm.h>
+#include "clemency.h"
+
 bool decode_R(inst_t *inst, const ut16 *src, int len);
 bool decode_R_IMM(inst_t *inst, const ut16 *src, int len);
 bool decode_U(inst_t *inst, const ut16 *src, int len);
@@ -18,3 +21,4 @@ bool decode_M(inst_t *inst, const ut16 *src, int len);
 bool decode_MP(inst_t *inst, const ut16 *src, int len);
 
 int parse_reg(const char **src);
+int disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len);

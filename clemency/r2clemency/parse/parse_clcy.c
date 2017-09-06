@@ -1,13 +1,19 @@
 /* radare - LGPL - Copyright 2017 - MaskRay */
 #include <r_asm.h>
+#include <r_core.h>
 #include <r_lib.h>
 #include <r_parse.h>
 #include <r_reg.h>
 #include <r_types.h>
 #include <r_util.h>
 
-static int _parse(RParse *p, const char *data, char *str) {
-	strcpy (str, data);
+#include "../include/disasm.h"
+
+static int _parse(RParse *p, const char *src, char *dst) {
+	RCore *core = p->user;
+	RAsmOp op;
+	diassemble (core->assembler, &op, src, strlen (src));
+	strcpy (src, dst);
 	return true;
 }
 
