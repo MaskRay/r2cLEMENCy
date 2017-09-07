@@ -38,7 +38,7 @@ parse/parse_clcy.$(LIBEXT): disasm.o
 	$(SDB) $@ = < $^
 
 clean:
-	$(RM) $(DEPS)
+	$(RM) $(DEPS) disasm.o
 
 $(R2PM_PLUGDIR):
 	mkdir $@

@@ -400,7 +400,7 @@ static RList *_patch_relocs(RBin *b) {
 		}
 	}
 
-	RIOSection sec = {.size = n_buf * 2, .vsize = 0x4000, .flags = R_IO_READ};
+	RIOSection sec = {.name = "NFO", .size = n_buf * 2, .vsize = 0x4000, .flags = R_IO_READ};
 	(void)r_io_create_mem_map (b->iob.io, &sec, NFO_VADDR, false);
 	(void)r_io_write_at (b->iob.io, NFO_VADDR, (const ut8 *)buf, len * 2);
 	free (buf);
