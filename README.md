@@ -35,6 +35,7 @@ This repository can be built either standalone or as a subdirectory of radare2-e
 Specify `PKG_CONFIG_PATH` if you install radare2 to a user directory.
 
 ```zsh
+# cd clemency
 PKG_CONFIG_PATH=~/.config/radare2/prefix/lib/pkgconfig make
 ```
 
@@ -53,6 +54,16 @@ make
 
 * `make symstall`: install symlinks to `R2PM_PLUGDIR` and `R2PM_SHAREDIR`
 * `make install`: install files
+
+## Usage
+
+[DEF CON CTF 2017 Final Scores and Data Dumps](https://blog.legitbs.net/2017/07/def-con-ctf-2017-final-scores-and-data.html)
+
+`DEF CON 25 CTF Finals service binaries/` contains service binaries used in DEF CON CTF Finals.
+
+```zsh
+r2 -e asm.parser=clcy -e asm.midflags=1 -a clcy clcy:///tmp/babyecho
+```
 
 ## Components
 
