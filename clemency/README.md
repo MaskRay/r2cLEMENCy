@@ -1,29 +1,28 @@
-Clemency plugin
-==============
-This repository contains a clemency plugins for radare2.
+# r2cLEMENCy
 
-* The asm plugin is not started
+## Building
 
-* The anal plugin is not started
+This repository can be built either standalone or as a subdirectory of radare2-extras.
 
-Directories
-===========
+### Standalone
 
-* asm/
+```zsh
+PKG_CONFIG_PATH=~/.config/radare2/prefix/lib/pkgconfig make
+```
 
-	Contains the asm plugin
+### Subdirectory of radare2-extras
 
-* anal/
+```zsh
+(cd ..  # radare2-extras
+./configure --prefix=~/.config/radare2/prefix  # generates options.mk
+)
+make
+```
 
-	Contains the anal plugin.
-
-Building
---------
-
-Just type `make`.
+`make info` to see used environment variables.
 
 Installation
 ------------
 
-Running `make install`. will put those shared libraries in your
-HOME's directory.
+* `make symstall`: install symlinks to `R2PM_PLUGDIR` and `R2PM_SHAREDIR`
+* `make install`: install files
