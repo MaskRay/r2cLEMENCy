@@ -12,7 +12,7 @@ CFLAGS += -g -fPIC -std=gnu11
 LDFLAGS += -shared
 
 SO := anal/anal_clcy.$(LIBEXT) asm/asm_clcy.$(LIBEXT) bin/bin_clcy.$(LIBEXT) \
-	core/core_clcy.$(LIBEXT) io/io_9bit.$(LIBEXT) parse/parse_clcy.$(LIBEXT) #debug/debug_clcy.$(LIBEXT)
+	core/core_clcy.$(LIBEXT) io/io_clcy.$(LIBEXT) parse/parse_clcy.$(LIBEXT) #debug/debug_clcy.$(LIBEXT)
 
 DEPS := $(SO) anal/d/cc-clcy-64.sdb asm/d/clcy.sdb syscall/d/linux-clcy-64.sdb
 
@@ -22,7 +22,7 @@ info:
 	@$(foreach i,R2_LIBS R2_CFLAGS R2_LDFLAGS R2PM_PLUGDIR R2PM_SHAREDIR,echo $(i)=$($i);)
 
 run: $(DEPS)
-	r2 -a clcy $(RUNFLAGS) 9bit://../third_party/clemency/hello.bin
+	r2 -a clcy $(RUNFLAGS) clcy://../third_party/clemency/hello.bin
 
 %.o: %.c include/*.h
 	$(COMPILE.c) $(R2_CFLAGS) $(R2_LDFLAGS) $< -o $@

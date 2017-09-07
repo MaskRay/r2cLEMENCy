@@ -13,6 +13,7 @@ static int _disassemble(RAsm *a, RAsmOp *op, const ut8 *src, int len) {
 
 static RAsmPlugin r_asm_plugin_clcy  = {
 	.name = "clcy",
+	.desc = "cLEMENCy asm",
 	.arch = "clcy",
 	.license = "LGPL3",
 	.bits = 64, // in accordance with r_anal_plugin_clcy

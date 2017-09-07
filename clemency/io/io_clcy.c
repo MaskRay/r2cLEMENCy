@@ -2,7 +2,6 @@
 #include <errno.h>
 #include <sys/mman.h>
 
-#include <r_core.h>
 #include <r_io.h>
 #include <r_lib.h>
 
@@ -16,14 +15,14 @@ typedef struct r_io_mmo_t {
 	bool dirty;
 } RIOMMapFileObj;
 
-extern RIOPlugin r_io_plugin_9bit;
+extern RIOPlugin r_io_plugin_clcy;
 
-static bool check_default(const char *filename) {
-	return !strncmp (filename, "9bit://", 7);
+static bool _check_default(const char *filename) {
+	return !strncmp (filename, "clcy://", 7);
 }
 
-static bool check(RIO *io, const char *filename, bool many) {
-	return check_default (filename);
+static bool _check(RIO *io, const char *filename, bool many) {
+	return _check_default (filename);
 }
 
 static int _close(RIODesc *fd) {
@@ -35,7 +34,7 @@ static int _close(RIODesc *fd) {
 		for (i = 0; i < mmo->size; i++) {
 			if (mmo->buf[i] >= 512) {
 				ok = false;
-				eprintf ("io_9bit: 16-bit at offset %"PFMT64x" >= 512", i);
+				eprintf ("io_clcy: 16-bit at offset %"PFMT64x" >= 512", i);
 				break;
 			}
 			x = x << 9 | mmo->buf[i];
@@ -49,13 +48,13 @@ static int _close(RIODesc *fd) {
 		if (ok) {
 			ssize_t t;
 			if (l)
-				mmo->buf[n_buf++] = x << 8-l;
+				((ut8 *)mmo->buf)[n_buf++] = x << 8-l;
 			if (lseek (mmo->fd, 0, SEEK_SET) == -1) {
-				eprintf ("io_9bit lseek: %s\n", strerror (errno));
+				eprintf ("io_clcy lseek: %s\n", strerror (errno));
 			} else if ((t = write (mmo->fd, mmo->buf, n_buf)) != n_buf) {
-				eprintf ("io_9bit: written %zd bytes, %s\n", t, strerror (errno));
+				eprintf ("io_clcy: written %zd bytes, %s\n", t, strerror (errno));
 			} else if (ftruncate (mmo->fd, n_buf) == -1) {
-				eprintf ("io_9bit ftruncate: %s\n", strerror (errno));
+				eprintf ("io_clcy ftruncate: %s\n", strerror (errno));
 			}
 		}
 	}
@@ -70,10 +69,13 @@ static int _close(RIODesc *fd) {
 static int _extend(RIO *io, RIODesc *fd, ut64 extend) {
 	RIOMMapFileObj *mmo = fd->data;
 	ut64 addr = io->off, size = mmo->size;
-	mmo->buf = realloc (mmo->buf, (size + extend) * 2);
-	if (!mmo->buf) return -1;
+	ut16 *buf = realloc (mmo->buf, (size + extend) * 2);
+	if (!buf) return -1;
+	mmo->buf = buf;
 	memmove (&mmo->buf[addr + extend], &mmo->buf[addr], (size - addr) * 2);
 	memset (&mmo->buf[addr], 0, extend * 2);
+	mmo->size += extend;
+	mmo->dirty = true;
 	return extend;
 }
 
@@ -93,7 +95,7 @@ static ut64 _lseek(RIO *io, RIODesc *fd, ut64 offset, int whence) {
 }
 
 static RIODesc *_open(RIO *io, const char *filename, int flags, int mode) {
-	if (!check_default (filename)) return NULL;
+	if (!_check_default (filename)) return NULL;
 	filename += 7;
 	RIOMMapFileObj *mmo;
 	ut8 *buf;
@@ -140,7 +142,7 @@ static RIODesc *_open(RIO *io, const char *filename, int flags, int mode) {
 		}
 	}
 	io->addrbytes = 2;
-	return r_io_desc_new (io, &r_io_plugin_9bit, mmo->filename, flags, mode, mmo);
+	return r_io_desc_new (io, &r_io_plugin_clcy, mmo->filename, flags, mode, mmo);
 
  out_mmo:
 	if (mmo) {
@@ -165,6 +167,19 @@ static int _read(RIO *io, RIODesc *fd, ut8 *buf, int len) {
 	return len;
 }
 
+static bool _resize(RIO *io, RIODesc *fd, ut64 size) {
+	RIOMMapFileObj *mmo = fd->data;
+	if (size > mmo->size) {
+		ut16 *buf = realloc (mmo->buf, size * 2);
+		if (!buf) return false;
+		mmo->buf = buf;
+		memset (&buf[mmo->size], 0, (size - mmo->size) * 2);
+	}
+	mmo->size = size;
+	mmo->dirty = true;
+	return true;
+}
+
 static int _write(RIO *io, RIODesc *fd, const ut8 *buf, int len) {
 	RIOMMapFileObj *mmo = fd->data;
 	if (io->off * 2 + len > mmo->size * 2) return -1;
@@ -173,21 +188,22 @@ static int _write(RIO *io, RIODesc *fd, const ut8 *buf, int len) {
 	return len;
 }
 
-RIOPlugin r_io_plugin_9bit = {
-	.name = "9bit",
-	.desc = "open files mapping 9bit on 16bit words",
+RIOPlugin r_io_plugin_clcy = {
+	.name = "clcy",
+	.desc = "cLEMENCy io",
 	.license = "LGPL3",
-	.check = check,
+	.check = _check,
 	.close = _close,
 	.extend = _extend,
 	.lseek = _lseek,
 	.open = _open,
 	.read = _read,
+	.resize = _resize,
 	.write = _write,
 };
 
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_IO,
-	.data = &r_io_plugin_9bit,
+	.data = &r_io_plugin_clcy,
 	.version = R2_VERSION,
 };
