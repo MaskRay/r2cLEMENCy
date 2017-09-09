@@ -345,7 +345,7 @@ static ut64 _baddr(RBinFile *arch) {
 }
 
 static bool _check_bytes(const ut8 *buf, ut64 len) {
-	return memcmp (buf, MAGIC, sizeof MAGIC) == 0;
+	return len >= sizeof MAGIC && memcmp (buf, MAGIC, sizeof MAGIC) == 0;
 }
 
 static RBuffer *_create(RBin *_bin, const ut8 *code, int codelen, const ut8 *_data, int _datalen) {
@@ -400,7 +400,7 @@ static RList *_patch_relocs(RBin *b) {
 		}
 	}
 
-	RIOSection sec = {.name = "NFO", .size = n_buf * 2, .vsize = 0x4000, .flags = R_IO_READ};
+	RIOSection sec = {.name = "NFO", .size = n_buf * 2, .vsize = 0x4000, .flags = R_IO_READ | R_IO_EXEC};
 	(void)r_io_create_mem_map (b->iob.io, &sec, NFO_VADDR, false);
 	(void)r_io_write_at (b->iob.io, NFO_VADDR, (const ut8 *)buf, len * 2);
 	free (buf);

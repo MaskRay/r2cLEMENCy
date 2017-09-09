@@ -41,7 +41,7 @@ static bool _varsub(RParse *p, RAnalFunction *f, ut64 addr, int oplen, char *src
 	spargs = p->varlist (p->anal, f, 's');
 
 	// Stack register variable st+%#x
-	r_list_foreach (bpargs, iter, var) {
+	r_list_foreach (spargs, iter, var) {
 		if (var->delta >= 0) {
 			sub = r_str_newf ("[st+%#x", var->delta);
 		} else {
@@ -103,8 +103,8 @@ static bool _varsub(RParse *p, RAnalFunction *f, ut64 addr, int oplen, char *src
 RParsePlugin r_parse_plugin_clcy = {
 	.name = "clcy",
 	.desc = "cLEMENCy pseudo syntax",
-	.parse = &_parse,
-	.varsub = &_varsub,
+	.parse = _parse,
+	.varsub = _varsub,
 };
 
 RLibStruct radare_plugin = {

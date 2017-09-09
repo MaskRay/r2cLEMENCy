@@ -75,3 +75,32 @@ r2 -e asm.parser=clcy -e asm.midflags=1 -a clcy clcy:///tmp/babyecho
 * `parse/parse_clcy.c`: C-like pseudo disassembler and variable substituter
 
 ![](https://ptpb.pw/XeC6.jpg)
+
+## Features
+
+`io_clcy`
+
+* Expand 9-bit to 16-bit
+
+`bin_clcy`
+
+* Loader: `om`
+
+`core_clcy`
+
+* 9-bit hexdump: `_px` `_pw` `_pt`
+
+`asm_clcy`
+
+* Disassembler: `pd`
+* Instruction descriptions: `e asm.describe=1`
+* Assembler: `e io.cache=1; wa ldt r1, [r0+0x57, 5]`
+
+`anal_clcy`
+
+* Instruction analyzer
+* ESIL translator: `e asm.emu=1`
+
+`parse_clcy`
+
+* C-like pseudo disassembler: `aa; pdc`
